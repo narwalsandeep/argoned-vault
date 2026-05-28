@@ -1,0 +1,2 @@
+# Compose reads `.env` here for ${API_PORT}, ${UI_PORT}, ${PGADMIN_PORT} (Postgres maps host 5454 in docker-compose.yml).
+.env
