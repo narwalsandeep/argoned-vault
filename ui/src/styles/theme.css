@@ -1,0 +1,68 @@
+/**
+ * Design tokens only (@theme). Do not add component or page layout rules here.
+ *
+ * Shared UI patterns (shell, pages, forms, toast) live in layout.css → index.css → styles.css.
+ *
+ * **Brand accent:** `--color-app-accent` is the single red used on login/auth CTAs and across the
+ * shell (sidebar “+”, tab indicators, brand “B”, credential tile icon, toasts). Gray scale is
+ * unchanged (`app-bg`, `app-text`, `app-border`, …). Secondary buttons use `app-elevated` / `app-elevated-hover`
+ * (lighter than `app-bg`). Use Tailwind `*-app-accent`, `*-app-add`, or `*-app-main-accent` for brand red.
+ */
+@theme {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  /* Backgrounds */
+  --color-app-bg: #171717;
+  --color-app-surface: #1c1c1c;
+  --color-app-surface-hover: #2a2a2a;
+  /** Secondary / outline buttons, lighter than `app-bg` fields, distinct from cards (`app-surface`). */
+  --color-app-elevated: #262626;
+  --color-app-elevated-hover: #363636;
+  /* Borders */
+  --color-app-border: #333333;
+  /* Text */
+  --color-app-text: #e8e8e8;
+  --color-app-text-muted: #b0b0b0;
+  --color-app-text-inverse: #fafafa;
+  /* Focus / interactive chrome */
+  --color-app-focus: #5c5c5c;
+
+  /**
+   * Primary brand red, one hex to restyle accents app-wide (login, shell, tabs, add action).
+   */
+  --color-app-accent: #c73e3e;
+
+  /** Alias: marketing / auth “B” marks and CTAs (.auth-brand-b, .auth-cta). */
+  --color-app-main-accent: var(--color-app-accent);
+
+  /** Alias: sidebar plus, shell highlights, active tab underline (legacy name `app-add`). */
+  --color-app-add: var(--color-app-accent);
+
+  /* First-level create icons: keep non-accent types distinct; credentials follows brand accent */
+  --color-app-icon-credentials: var(--color-app-accent);
+  --color-app-icon-keys: var(--color-amber-500);
+  --color-app-icon-files: var(--color-slate-500);
+  --color-app-icon-passwords: var(--color-red-600);
+  --color-app-icon-ids: var(--color-violet-500);
+  --color-app-icon-secure: var(--color-teal-500);
+
+  /** Credential subtypes (Vault list + Create → Credentials), match icon tint in both places */
+  --color-app-credential-website: var(--color-app-accent);
+  --color-app-credential-app: var(--color-teal-500);
+  --color-app-credential-database: var(--color-slate-400);
+  --color-app-credential-api-key: var(--color-amber-500);
+  --color-app-credential-ssh: var(--color-violet-500);
+  --color-app-credential-generic: var(--color-app-text-muted);
+  --color-app-credential-email: var(--color-blue-500);
+  --color-app-credential-license: var(--color-emerald-500);
+
+  /**
+   * Control sizing: one height for inputs, selects, and buttons app-wide.
+   * Change only these tokens to rescale forms without touching individual pages.
+   */
+  --control-height: 2.875rem;
+  --control-padding-inline: 1rem;
+  --control-padding-inline-button: 1.25rem;
+  --control-padding-block: 0.5rem;
+  --control-font-size: 0.9375rem;
+  --control-line-height: 1.375;
+}
