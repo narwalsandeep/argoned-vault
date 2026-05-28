@@ -1,0 +1,49 @@
+# Production overrides (use with base docker-compose.yml):
+#   docker compose --env-file ./api/.env -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# — Static SPA (ui): tuned nginx (gzip, sendfile, cache-friendly hashed assets, higher worker_connections).
+# — API: nginx + PHP-FPM + Opcache instead of `php -S` (multi-worker, better throughput behind host reverse-proxy).
+# — Postgres: conservative `-c` defaults suitable for small/medium VPS (raise shared_buffers if you have spare RAM).
+# — Host nginx in front should enable HTTP/2 or HTTP/3, TLS session caches, and proxy buffering tuned to your traffic.
+
+services:
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.prod
+    command: null
+    working_dir: /usr/share/nginx/html
+    volumes: []
+    env_file:
+      - ./api/.env
+    environment:
+      UI_PORT: "${UI_PORT:-3002}"
+      # CSP connect-src: origins the SPA may fetch (must include apiBaseUrl from environment.prod.ts).
+      NGINX_UI_CONNECT_SRC: ${NGINX_UI_CONNECT_SRC:-https://api.argoned.com}
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile.prod
+    command: ["/usr/local/bin/api-start-prod.sh"]
+    restart: unless-stopped
+    init: true
+
+  db:
+    restart: unless-stopped
+    command:
+      - |
+        export POSTGRES_DB="$${DB_NAME:-blackbox}"
+        export POSTGRES_USER="$${DB_USER:-blackbox}"
+        export POSTGRES_PASSWORD="$${DB_PASSWORD:-blackbox}"
+        exec /usr/local/bin/docker-entrypoint.sh postgres \
+          -c max_connections=150 \
+          -c shared_buffers=256MB \
+          -c effective_cache_size=768MB \
+          -c work_mem=8MB \
+          -c maintenance_work_mem=128MB \
+          -c random_page_cost=1.1 \
+          -c checkpoint_completion_target=0.9 \
+          -c wal_buffers=16MB \
+          -c default_statistics_target=100
