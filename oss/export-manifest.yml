@@ -1,0 +1,24 @@
+# Full-code OSS mirror. Private source: argoned/argoned (today: narwalsandeep/blackbox).
+# Consumed by oss/scripts/build-export.sh and publish-oss.yml.
+
+# Copy everything under the vault repo root except excludes below.
+include:
+  - "**/*"
+
+exclude:
+  - api/.env
+  - api/.env.local
+  - api/.env.production
+  - "**/*.pem"
+  - "**/*.key"
+  - "**/secrets/**"
+  - .git/**
+
+# Never exclude api/.env.example — self-hosters copy it to api/.env.
+
+add:
+  - src: oss/LICENSE-MIT
+    dest: LICENSE
+
+# Replace README on export (public repo landing page).
+replace_readme: oss/README-PUBLIC.md

@@ -1,0 +1,1224 @@
+@import "tailwindcss";
+
+/* Key flow: one dot crosses each bridge left → right, then the next (step-by-step) */
+@keyframes site-keyflow-travel-a {
+  0%,
+  100% {
+    opacity: 0;
+    left: 0%;
+  }
+  6% {
+    opacity: 1;
+  }
+  42% {
+    opacity: 1;
+    left: 100%;
+  }
+  48%,
+  99% {
+    opacity: 0;
+    left: 100%;
+  }
+}
+@keyframes site-keyflow-travel-b {
+  0%,
+  52% {
+    opacity: 0;
+    left: 0%;
+  }
+  58% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+    left: 100%;
+  }
+  97%,
+  100% {
+    opacity: 0;
+    left: 100%;
+  }
+}
+@keyframes site-keyflow-mobile-travel-a {
+  0%,
+  100% {
+    opacity: 0;
+    top: 0;
+  }
+  7% {
+    opacity: 1;
+  }
+  43% {
+    opacity: 1;
+    top: calc(100% - 3px);
+  }
+  48%,
+  99% {
+    opacity: 0;
+    top: calc(100% - 3px);
+  }
+}
+@keyframes site-keyflow-mobile-travel-b {
+  0%,
+  54% {
+    opacity: 0;
+    top: 0;
+  }
+  58% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+    top: calc(100% - 3px);
+  }
+  95%,
+  100% {
+    opacity: 0;
+    top: calc(100% - 3px);
+  }
+}
+@keyframes site-keyflow-node-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(199, 62, 62, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 20px 2px rgba(199, 62, 62, 0.15);
+  }
+}
+@theme {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --color-app-bg: #171717;
+  --color-app-surface: #1c1c1c;
+  --color-app-surface-hover: #2a2a2a;
+  --color-app-elevated: #262626;
+  --color-app-border: #333333;
+  --color-app-text: #e8e8e8;
+  --color-app-text-muted: #b0b0b0;
+  --color-app-accent: #c73e3e;
+  --color-app-focus: #5c5c5c;
+}
+
+@layer base {
+  html {
+    @apply font-sans antialiased;
+  }
+}
+
+/**
+ * Marketing design system, pure Tailwind via @apply (website/ only).
+ *
+ * Layout: .site-page, .site-section, .site-section-head, .site-divider, .site-page-nav
+ * Type: .site-title (inner heroes), .site-display, .site-hero-home-* (home hero split layout), .site-subdisplay, .site-lead-bold, .site-statement + .site-statement-text
+ * CTAs: .site-hero-actions, .site-btn-primary, .site-btn-secondary, .site-btn-outline
+ * Split rows: .site-feature, .site-feature--reverse, .site-feature-visual, .site-feature-icon-lg, .site-feature-icon-lg-muted, .site-feature-body
+ * Accordion: .site-vtabs, .site-vtabs-item, .site-vtabs-trigger, .site-vtabs-chevron, .site-vtabs-panel
+ * Process: .site-process-shell, .site-process-rail-line (+ .site-process-dot, .site-process-body)
+ * Alternating timelines (product): .site-timeline (center rail), .site-timeline-step--left|--right, .site-timeline-panel, .site-timeline-axis, .site-timeline-between
+ * Cards/steps/metrics/bento/quote/callout/table: existing .site-* in this file; list accents: .site-check-bubble, .site-promise-list
+ * Home / product bands: .site-band-stack (vertical section rhythm), .site-story-grid (two-column story row),
+ *   .site-panel-grid (+ .site-panel-grid-inner, .site-panel-grid-cell, --technical, --emphasis, --span-2, .site-panel-grid-detail),
+ *   .site-showcase-title, .site-showcase-eyebrow, .site-home-showcase-intro, .site-home-story (+ --muted), .site-panel-label
+ * Legacy shell (prefer .site-band-stack on new work): .site-showcase-shell (+ -glow, -inner)
+ * Header / footer: .site-logo (+ --nav, --footer), .site-logo-accent, .site-logo-core; .site-footer (+ -inner, -grid, -brand, -link, -bottom)
+ * Pricing (/pricing): .site-pricing-tier-grid (subgrid at `lg`), .site-pricing-card (+ --featured), .site-pricing-badge (+ --accent), .site-pricing-flair (+ -icon, -copy), .site-pricing-heading-rule, .site-pricing-name-row, .site-pricing-lifetime-policy-trigger, .site-pricing-dialog-* (Lifetime policy modal), .site-pricing-name/price/period/blurb/list, .site-pricing-security-grid (+ -item, -icon)
+ */
+@layer components {
+  /* Page shell, vertical rhythm via gap (avoid stacked blocks touching) */
+  .site-page {
+    @apply mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-16 py-20 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:py-24 md:gap-20 md:py-32 lg:gap-28;
+    @apply sm:pl-8 sm:pr-8;
+  }
+  /* Home: alternating slightly lifted bands + clearer section separation */
+  .site-page--home {
+    @apply gap-14 md:gap-16 lg:gap-20;
+  }
+  /* Product (and similar inner pages): match home vertical rhythm without implying home-only layout */
+  .site-page--product {
+    @apply gap-14 md:gap-16 lg:gap-20;
+  }
+  .site-home-band {
+    @apply min-w-0 max-w-full rounded-2xl border border-app-border/30 px-4 py-10 sm:rounded-[1.75rem] sm:px-8 sm:py-14 md:py-16;
+  }
+  .site-home-band--alt {
+    @apply border-app-border/45 bg-gradient-to-b from-app-elevated/50 via-app-surface/30 to-app-bg/95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.045),0_12px_40px_-28px_rgba(0,0,0,0.5)];
+  }
+  .site-home-band--plain {
+    @apply border-transparent bg-transparent px-0 py-0;
+  }
+  /* Vertical stack inside a band, matches home/product section spacing */
+  .site-band-stack {
+    @apply space-y-10 md:space-y-12;
+  }
+  /* Pair of .site-home-story panels (home crypto, product flows) */
+  .site-story-grid {
+    @apply grid gap-8 lg:grid-cols-2 lg:gap-10;
+  }
+
+  /* Dense security / FAQ-style panels: one rounded shell, 1px gutters (avoids “small floating boxes” on alt bands) */
+  .site-panel-grid {
+    @apply min-w-0 overflow-hidden rounded-2xl border border-app-border/40 shadow-[0_20px_56px_-28px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/[0.05] md:rounded-[1.35rem];
+  }
+  .site-panel-grid-inner {
+    @apply grid gap-px bg-app-border/35 md:grid-cols-2;
+  }
+  .site-panel-grid-cell {
+    @apply min-h-0 bg-gradient-to-b from-app-elevated/[0.72] via-app-surface/42 to-app-bg/95 p-5 sm:p-6 md:p-7 lg:p-8;
+  }
+  .site-panel-grid-cell--technical {
+    @apply from-app-elevated/[0.48] via-app-surface/34 to-app-bg/[0.98];
+  }
+  .site-panel-grid-cell--emphasis {
+    @apply from-app-accent/[0.07] via-app-elevated/52 to-app-bg/95 ring-1 ring-inset ring-app-accent/12;
+  }
+  .site-panel-grid-cell--span-2 {
+    @apply md:col-span-2;
+  }
+  .site-panel-grid-detail {
+    @apply mt-4 border-t border-app-border/45 pt-4;
+  }
+  .site-page-narrow {
+    @apply mx-auto min-w-0 max-w-3xl py-16 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:py-20 md:py-24;
+    @apply sm:pl-8 sm:pr-8;
+  }
+
+  /* Long-form legal / policy copy (terms, privacy) */
+  .site-legal-doc {
+    @apply mx-auto min-w-0 max-w-3xl space-y-8 text-pretty text-app-text [overflow-wrap:anywhere] md:space-y-10;
+  }
+  .site-legal-doc .site-h3 {
+    @apply mt-2 scroll-mt-24;
+  }
+  .site-legal-list {
+    @apply list-decimal space-y-3 pl-5 text-sm leading-relaxed text-app-text-muted md:text-base;
+  }
+  .site-legal-list ul {
+    @apply mt-2 list-disc space-y-2 pl-5;
+  }
+
+  /* Typography blocks */
+  .site-kicker {
+    @apply text-[0.7rem] font-bold uppercase tracking-[0.26em] text-app-accent sm:text-[0.8rem];
+  }
+  .site-lead {
+    @apply min-w-0 max-w-3xl text-lg leading-relaxed text-app-text-muted md:text-xl md:leading-relaxed;
+  }
+  .site-section {
+    @apply space-y-6 md:space-y-8;
+  }
+  .site-section-head {
+    @apply mb-12 min-w-0 max-w-3xl space-y-5 md:mb-16;
+  }
+  .site-h2 {
+    @apply min-w-0 text-2xl font-extrabold tracking-tight text-app-text md:text-3xl;
+  }
+  /* Section titles in page body, a touch larger than .site-h2 */
+  .site-section-title {
+    @apply min-w-0 text-[1.75rem] font-extrabold tracking-tight text-app-text md:text-[2.125rem];
+  }
+  .site-h3 {
+    @apply text-lg font-bold text-app-text md:text-xl;
+  }
+
+  /* Bold page titles (subheroes) */
+  .site-title {
+    @apply mt-4 min-w-0 max-w-4xl text-3xl font-extrabold tracking-tight text-app-text sm:text-4xl md:text-[2.85rem] md:leading-[1.12];
+  }
+  .site-display {
+    @apply text-4xl font-extrabold tracking-tight text-app-text sm:text-5xl md:text-6xl lg:text-[3.35rem] lg:leading-[1.06];
+  }
+  /* Centered promise line under a kicker, one step smaller than .site-display */
+  .site-subdisplay {
+    @apply min-w-0 px-1 text-center text-3xl font-extrabold tracking-tight text-app-text sm:px-0 sm:text-4xl md:text-[2.125rem] md:leading-[1.1] lg:text-5xl lg:leading-[1.06];
+  }
+  .site-lead-bold {
+    @apply max-w-3xl text-xl font-semibold leading-snug text-app-text/95 md:text-2xl md:leading-snug;
+  }
+  /* Standout line / banner */
+  .site-statement {
+    @apply rounded-[1.75rem] border border-app-accent/30 bg-gradient-to-r from-app-accent/[0.12] via-app-accent/[0.06] to-transparent px-6 py-6 text-center md:px-12 md:py-8;
+  }
+  .site-statement-text {
+    @apply text-lg font-bold leading-snug text-app-text md:text-xl;
+  }
+
+  /* CTAs, use on <a> or <button> */
+  .site-hero-actions {
+    @apply mt-12 flex w-full min-w-0 flex-wrap items-center justify-center gap-3 px-1 sm:gap-4 md:mt-14 md:gap-5;
+  }
+  .site-btn-primary {
+    @apply inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 rounded-2xl bg-app-accent px-10 text-base font-bold text-white shadow-[0_12px_40px_-12px_rgba(199,62,62,0.55)] transition hover:opacity-95 md:min-h-14 md:gap-3 md:px-12 md:text-lg;
+  }
+  .site-btn-secondary {
+    @apply inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 rounded-2xl border border-app-border/90 bg-app-elevated/80 px-10 text-base font-bold text-app-text backdrop-blur-sm transition hover:border-app-text-muted/35 hover:bg-app-surface-hover md:min-h-14 md:gap-3 md:px-12 md:text-lg;
+  }
+  .site-btn-outline {
+    @apply inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 rounded-2xl border border-app-accent/40 bg-app-accent/10 px-10 text-base font-bold text-app-accent transition hover:bg-app-accent/18 md:min-h-14 md:gap-3 md:px-12 md:text-lg;
+  }
+  .site-btn-icon {
+    @apply size-5 shrink-0 md:size-6;
+  }
+
+  /* Animated key-flow explainer (home) */
+  .site-keyflow {
+    @apply min-w-0;
+  }
+  .site-keyflow-lead {
+    @apply mb-6 text-center text-[0.9375rem] font-semibold leading-relaxed text-app-text md:text-lg;
+  }
+  .site-keyflow-pipeline {
+    @apply mb-6 flex flex-col gap-5 md:flex-row md:items-stretch md:justify-between md:gap-3;
+  }
+  .site-keyflow-node {
+    animation: site-keyflow-node-pulse 4s ease-in-out infinite;
+    @apply flex flex-1 flex-col items-center justify-center rounded-xl border border-app-border/60 bg-app-surface/70 px-3 py-4 text-center md:min-h-[5.5rem] md:px-4;
+  }
+  /* Pipeline order: node, mobile-join, bridge, node, … */
+  .site-keyflow-node:nth-child(4) {
+    animation-delay: 1.3s;
+  }
+  .site-keyflow-node:nth-child(7) {
+    animation-delay: 2.6s;
+  }
+  .site-keyflow-node-code {
+    @apply font-mono text-base font-extrabold tracking-wider text-app-accent md:text-lg;
+  }
+  .site-keyflow-node-hint {
+    @apply mt-1 max-w-[14rem] text-xs leading-snug text-app-text-muted md:text-sm;
+  }
+  .site-keyflow-bridge {
+    @apply relative mx-4 hidden min-h-[3rem] min-w-0 flex-1 md:flex md:items-center;
+  }
+  .site-keyflow-bridge-line {
+    @apply absolute inset-x-0 top-1/2 h-px -translate-y-1/2 rounded-full bg-gradient-to-r from-app-border/80 via-app-accent/35 to-app-border/80;
+  }
+  .site-keyflow-bridge-cap {
+    @apply absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-app-accent/50;
+  }
+  .site-keyflow-bridge-cap--start {
+    @apply left-0;
+  }
+  .site-keyflow-bridge-cap--end {
+    @apply left-full;
+  }
+  .site-keyflow-bridge-travel {
+    @apply pointer-events-none absolute top-1/2 z-[1] size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-app-accent shadow-[0_0_10px_rgba(199,62,62,0.85)];
+    animation: site-keyflow-travel-a 7s ease-in-out infinite;
+  }
+  .site-keyflow-pipeline > .site-keyflow-bridge:nth-child(6) .site-keyflow-bridge-travel {
+    animation-name: site-keyflow-travel-b;
+  }
+  .site-keyflow-mobile-join {
+    @apply flex flex-col items-center py-1 md:hidden;
+  }
+  .site-keyflow-mobile-join-line {
+    @apply relative h-8 w-px bg-gradient-to-b from-app-border via-app-accent/35 to-app-border;
+  }
+  .site-keyflow-mobile-travel {
+    @apply pointer-events-none absolute left-1/2 z-[1] size-1.5 -translate-x-1/2 rounded-full bg-app-accent shadow-[0_0_8px_rgba(199,62,62,0.8)];
+    animation: site-keyflow-mobile-travel-a 7s ease-in-out infinite;
+  }
+  .site-keyflow-mobile-join--b .site-keyflow-mobile-travel {
+    animation-name: site-keyflow-mobile-travel-b;
+  }
+  .site-keyflow-detail {
+    @apply space-y-2.5 border-t border-app-border/40 pt-5 text-left text-[0.9375rem] leading-relaxed text-app-text-muted md:text-base;
+  }
+  .site-keyflow-detail li {
+    @apply flex items-start gap-2 pl-1;
+  }
+  .site-keyflow-detail li::before {
+    content: "";
+    @apply mt-2 size-1.5 shrink-0 rounded-full bg-app-accent/80;
+  }
+
+  /* Primary nav row, scroll on narrow phones; wrap from sm up */
+  .site-header-nav {
+    @apply flex w-full min-w-0 flex-nowrap items-center justify-start gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-0.5 [-webkit-overflow-scrolling:touch] sm:w-auto sm:flex-wrap sm:justify-end sm:overflow-visible sm:gap-1 sm:pb-0 md:gap-2;
+  }
+  /* Header nav link + icon */
+  .site-nav-link {
+    @apply inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-app-text-muted transition hover:bg-app-elevated hover:text-app-text;
+  }
+  .site-nav-link svg {
+    @apply size-4 shrink-0 opacity-80;
+  }
+  .site-nav-link--cta {
+    @apply inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-2 rounded-lg border border-app-accent/40 bg-app-accent/10 px-3 py-2 text-sm font-bold text-app-accent transition hover:bg-app-accent/20;
+  }
+  .site-nav-link--cta svg {
+    @apply size-4 shrink-0;
+  }
+  .site-nav-link.router-link-active {
+    @apply text-app-accent;
+  }
+  .site-nav-link--cta.router-link-active {
+    @apply border-app-accent/55 bg-app-accent/18;
+  }
+
+  /* Wordmark, size via modifier (.site-logo--nav header, .site-logo--footer) */
+  .site-logo {
+    @apply font-extrabold tracking-tight transition group-hover:opacity-90;
+  }
+  .site-logo--nav {
+    @apply text-xl md:text-2xl;
+  }
+  .site-logo--footer {
+    @apply text-3xl md:text-4xl lg:text-[2.65rem] lg:leading-none;
+  }
+  .site-logo-accent {
+    @apply text-app-accent;
+  }
+  .site-logo-core {
+    @apply text-app-text;
+  }
+  .site-logo.site-hero-home-brand {
+    @apply font-black;
+  }
+
+  .site-footer {
+    @apply relative mt-auto border-t border-app-border/70 bg-gradient-to-b from-app-surface/50 via-app-bg/95 to-app-bg;
+  }
+  .site-footer::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-app-accent/45 to-transparent;
+  }
+  .site-footer-inner {
+    @apply mx-auto max-w-6xl py-14 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:py-16 md:py-16 lg:py-20;
+    @apply sm:pl-6 sm:pr-6;
+  }
+  .site-footer-grid {
+    @apply grid gap-12 border-b border-app-border/45 pb-12 md:grid-cols-12 md:gap-10 md:pb-16 lg:gap-12;
+  }
+  .site-footer-brand {
+    @apply md:col-span-5 lg:col-span-5;
+  }
+  .site-footer-tagline {
+    @apply mt-5 max-w-full text-sm leading-relaxed text-app-text-muted sm:max-w-md md:text-base;
+  }
+  .site-footer-columns {
+    @apply grid gap-10 sm:grid-cols-2 md:col-span-7 md:col-start-6 lg:col-span-7 lg:col-start-6;
+  }
+  .site-footer-col-title {
+    @apply mb-4 text-[0.65rem] font-bold uppercase tracking-[0.22em] text-app-accent/90;
+  }
+  .site-footer-links {
+    @apply flex flex-col gap-3;
+  }
+  .site-footer-link {
+    @apply text-sm font-medium text-app-text-muted transition hover:text-app-accent;
+  }
+  .site-footer-bottom {
+    @apply flex flex-col items-center gap-6 pt-10 md:flex-row md:items-start md:justify-between md:gap-8 md:pt-12;
+  }
+  .site-footer-bottom-note {
+    @apply max-w-xl text-center text-xs leading-relaxed text-app-text-muted/85 md:text-left;
+  }
+  .site-footer-bottom-note a {
+    @apply font-medium text-app-accent underline-offset-2 hover:underline;
+  }
+  .site-footer-copyright {
+    @apply shrink-0 text-center text-sm text-app-text-muted md:text-right;
+  }
+
+  /* Icon + body split (alternate with .site-feature--reverse on md+) */
+  .site-feature {
+    @apply flex min-w-0 flex-col gap-6 rounded-[1.35rem] border border-app-border/50 bg-gradient-to-br from-app-surface/95 to-app-bg/90 p-6 shadow-[0_16px_48px_-18px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.05] sm:gap-8 sm:rounded-[1.75rem] sm:p-8 md:flex-row md:items-center md:gap-12 md:p-10 lg:gap-14;
+  }
+  .site-feature--reverse {
+    @apply md:flex-row-reverse;
+  }
+  .site-feature-visual {
+    @apply flex shrink-0 justify-center md:w-[min(11rem,26%)] md:justify-start;
+  }
+  .site-feature--reverse .site-feature-visual {
+    @apply md:justify-end;
+  }
+  .site-feature-icon-lg {
+    @apply inline-flex size-[4.5rem] items-center justify-center rounded-3xl bg-app-accent/[0.14] text-app-accent shadow-[0_8px_28px_-8px_rgba(199,62,62,0.35)] ring-1 ring-app-accent/25 md:size-[5.25rem] md:rounded-[1.65rem];
+  }
+  .site-feature-icon-lg-muted {
+    @apply inline-flex size-[4.5rem] items-center justify-center rounded-3xl bg-app-elevated/95 text-app-text-muted ring-1 ring-app-border/55 md:size-[5.25rem] md:rounded-[1.65rem];
+  }
+  .site-feature-body {
+    @apply min-w-0 flex-1;
+  }
+
+  /* Vertical accordion “tabs” (native details) */
+  .site-vtabs {
+    @apply flex flex-col gap-3 md:gap-4;
+  }
+  .site-vtabs-item {
+    @apply rounded-2xl border border-app-border/55 bg-app-surface/45 shadow-[0_6px_28px_-12px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.04];
+  }
+  .site-vtabs-item > summary {
+    list-style: none;
+  }
+  .site-vtabs-item > summary::-webkit-details-marker {
+    display: none;
+  }
+  .site-vtabs-trigger {
+    @apply flex min-h-[3rem] cursor-pointer touch-manipulation items-center justify-between gap-3 px-4 py-3.5 text-left text-base font-extrabold text-app-text transition hover:bg-app-elevated/30 sm:gap-4 sm:px-5 sm:py-4 md:min-h-0 md:px-7 md:py-5 md:text-lg;
+  }
+  .site-vtabs-chevron {
+    @apply shrink-0 text-lg font-bold text-app-accent transition-transform duration-200;
+  }
+  .site-vtabs-item[open] .site-vtabs-chevron {
+    @apply rotate-90;
+  }
+  .site-vtabs-panel {
+    @apply border-t border-app-border/45 px-4 pb-5 pt-1 sm:px-5 md:px-7 md:pb-6;
+  }
+
+  /* Process column shell (rail + steps) */
+  .site-process-shell {
+    @apply relative md:pl-2;
+  }
+  .site-process-rail-line {
+    @apply pointer-events-none absolute bottom-4 left-[18px] top-4 hidden w-px bg-gradient-to-b from-app-accent/45 via-app-border to-app-border/25 md:block;
+  }
+
+  /* Bottom page nav row */
+  .site-page-nav {
+    @apply flex flex-wrap justify-center gap-3 pb-2;
+  }
+  .site-page-nav--explore {
+    @apply flex-col items-stretch gap-4 pb-0 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 md:gap-5;
+  }
+  .site-explore-link {
+    @apply inline-flex min-h-[3.35rem] w-full items-center justify-center gap-3 rounded-2xl border border-app-border/85 bg-app-elevated/75 px-9 text-base font-bold text-app-text no-underline shadow-[0_4px_24px_-12px_rgba(0,0,0,0.35)] transition hover:border-app-accent/45 hover:bg-app-surface-hover hover:text-app-accent sm:w-auto sm:min-w-[12.5rem] md:min-h-14 md:gap-3.5 md:px-11 md:text-lg;
+  }
+  .site-explore-link svg {
+    @apply size-4 shrink-0 opacity-80;
+  }
+  .site-p {
+    @apply min-w-0 text-[1.05rem] leading-relaxed text-app-text-muted md:text-[1.125rem] md:leading-relaxed;
+  }
+  .site-ul {
+    @apply list-disc space-y-3 pl-6 text-base leading-relaxed text-app-text-muted;
+  }
+
+  /* Pills & tags */
+  .site-badge {
+    @apply inline-flex items-center rounded-full border border-app-accent/25 bg-app-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-app-accent;
+  }
+  .site-tag {
+    @apply inline-flex rounded-full border border-app-border/80 bg-app-elevated/60 px-3 py-1 text-xs font-medium text-app-text-muted;
+  }
+
+  /* Cards */
+  .site-card {
+    @apply min-w-0 rounded-3xl border border-app-border/70 bg-app-surface/80 p-6 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset] sm:p-8 md:p-10;
+  }
+  .site-card-soft {
+    @apply min-w-0 rounded-3xl border border-app-border/50 bg-gradient-to-br from-app-surface to-app-bg/90 p-6 sm:p-8 md:p-10;
+  }
+  .site-card-glow {
+    @apply min-w-0 rounded-3xl border border-app-accent/20 bg-app-surface/60 p-6 shadow-[0_0_40px_-12px_rgba(199,62,62,0.35)] sm:p-8 md:p-10;
+  }
+  .site-card-interactive {
+    @apply transition duration-300 hover:border-app-border hover:bg-app-surface-hover/30 hover:shadow-lg;
+  }
+
+  /* Icon holder */
+  .site-icon-box {
+    @apply mb-6 inline-flex size-14 items-center justify-center rounded-2xl bg-app-accent/[0.12] text-app-accent;
+  }
+  .site-icon-box-muted {
+    @apply mb-6 inline-flex size-14 items-center justify-center rounded-2xl bg-app-elevated text-app-text-muted;
+  }
+  /* Compact icon for card headers (inline with title row) */
+  .site-icon-chip {
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-app-accent/[0.12] text-app-accent ring-1 ring-app-accent/20;
+  }
+  .site-icon-chip-muted {
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-app-elevated/90 text-app-text-muted ring-1 ring-app-border/60;
+  }
+  .site-icon-chip-sm {
+    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-app-elevated/90 text-app-text-muted ring-1 ring-app-border/50;
+  }
+  /* Accent check glyph in a list row (e.g. product free-plan promises) */
+  .site-check-bubble {
+    @apply mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-app-accent/[0.12] text-app-accent ring-1 ring-app-accent/20;
+  }
+  .site-promise-list {
+    @apply mx-auto max-w-lg space-y-5 text-left;
+  }
+
+  /* Horizontal stepper (process) */
+  .site-steps {
+    @apply grid gap-8 md:grid-cols-3 lg:grid-cols-4;
+  }
+  /* Single-column steps (home key flow) */
+  .site-steps-vertical {
+    @apply mx-auto flex max-w-2xl flex-col gap-6 md:gap-8;
+  }
+  .site-steps-vertical .site-step {
+    @apply min-h-0 w-full md:min-h-0;
+  }
+  /* Horizontal step / timeline (home key-flow 01 to 03) */
+  .site-steps-h {
+    @apply relative mx-auto mt-12 max-w-5xl md:mt-14;
+  }
+  .site-steps-h-track {
+    @apply relative grid gap-12 md:grid-cols-3 md:gap-6 md:pt-1;
+  }
+  .site-steps-h-track::before {
+    content: "";
+    @apply pointer-events-none absolute left-[16.67%] right-[16.67%] top-[1.625rem] z-0 hidden h-[3px] rounded-full bg-gradient-to-r from-app-border/60 via-app-accent/45 to-app-border/60 md:block;
+  }
+  .site-step-h {
+    @apply relative z-[1] flex flex-col items-center gap-4 text-center;
+  }
+  .site-step-h-num {
+    @apply flex size-[3.25rem] shrink-0 items-center justify-center rounded-full border-[3px] border-app-bg bg-app-accent font-mono text-sm font-bold text-white shadow-[0_0_22px_-4px_rgba(199,62,62,0.55)] md:size-14 md:text-base;
+  }
+  .site-step-h-body {
+    @apply mx-auto max-w-sm space-y-3 px-1 md:max-w-none;
+  }
+  .site-step-h-title {
+    @apply text-[1.0625rem] font-bold text-app-text md:text-lg;
+  }
+  .site-step-h-desc {
+    @apply text-[0.9375rem] leading-relaxed text-app-text-muted md:text-base;
+  }
+  .site-step-h-icon {
+    @apply text-app-text-muted;
+  }
+  .site-step {
+    @apply relative flex flex-col items-start rounded-3xl border border-app-border/50 bg-gradient-to-b from-app-surface/90 to-app-bg/95 p-9 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.04] md:min-h-[14rem];
+  }
+  .site-step-num {
+    @apply mb-5 flex size-11 shrink-0 items-center justify-center rounded-xl bg-app-accent font-mono text-sm font-bold text-white;
+  }
+  .site-step-title {
+    @apply text-[1.0625rem] font-bold text-app-text md:text-lg;
+  }
+  .site-step-desc {
+    @apply mt-3 text-[0.9375rem] leading-relaxed text-app-text-muted md:text-base;
+  }
+  /* connector line between steps on large screens */
+  .site-step-connector {
+    @apply relative hidden md:block;
+  }
+  .site-step-connector::after {
+    content: "";
+    @apply absolute right-0 top-14 hidden h-px w-[calc(100%-2.75rem)] translate-x-1/2 bg-gradient-to-r from-app-border to-transparent lg:block;
+  }
+
+  /* Vertical timeline / process */
+  .site-process {
+    @apply relative space-y-0;
+  }
+  .site-process-item {
+    @apply relative flex gap-6 pb-14 pl-2 md:gap-10 md:pb-20 md:pl-4;
+  }
+  .site-process-item:last-child {
+    @apply pb-0;
+  }
+  .site-process-rail {
+    @apply absolute bottom-0 left-[15px] top-2 w-px bg-gradient-to-b from-app-accent/60 via-app-border to-app-border/30 md:left-[19px];
+  }
+  .site-process-dot {
+    @apply relative z-10 mt-1.5 size-4 shrink-0 rounded-full border-[3px] border-app-bg bg-app-accent shadow-[0_0_12px_rgba(199,62,62,0.45)];
+  }
+  .site-process-body {
+    @apply flex-1 rounded-3xl border border-app-border/50 bg-app-surface/50 p-7 shadow-[0_4px_24px_-14px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.03] md:p-9;
+  }
+
+  /* Alternating vertical timeline, center rail, boxed steps (product onboarding) */
+  .site-timeline-track-title {
+    @apply mb-8 text-center text-[0.65rem] font-bold uppercase tracking-[0.2em] text-app-text-muted md:mb-10 md:text-xs md:tracking-[0.22em];
+  }
+  .site-timeline {
+    @apply relative mx-auto min-w-0 w-full max-w-5xl list-none space-y-0 px-1 py-0 sm:px-2 md:px-4;
+  }
+  .site-timeline::before {
+    content: "";
+    @apply pointer-events-none absolute bottom-3 left-1/2 top-3 z-0 hidden w-px -translate-x-1/2 bg-gradient-to-b from-app-accent/40 via-app-border/45 to-app-border/20 md:block;
+  }
+  .site-timeline-step {
+    @apply relative grid grid-cols-1 items-start gap-y-5 pb-10 last:pb-0 md:grid-cols-[minmax(0,1fr)_2.75rem_minmax(0,1fr)] md:gap-x-4 md:gap-y-0 md:pb-14;
+  }
+  .site-timeline-step--left .site-timeline-panel {
+    @apply z-[1] mx-auto md:mx-0 md:col-start-1 md:row-start-1 md:justify-self-end;
+  }
+  .site-timeline-step--left .site-timeline-spine--mobile {
+    @apply mx-auto md:hidden;
+  }
+  .site-timeline-step--left .site-timeline-axis {
+    @apply md:col-start-2 md:row-start-1;
+  }
+  .site-timeline-step--left .site-timeline-gutter {
+    @apply hidden md:block md:col-start-3 md:row-start-1;
+  }
+  .site-timeline-step--right .site-timeline-panel {
+    @apply z-[1] mx-auto md:mx-0 md:col-start-3 md:row-start-1 md:justify-self-start;
+  }
+  .site-timeline-step--right .site-timeline-spine--mobile {
+    @apply mx-auto md:hidden;
+  }
+  .site-timeline-step--right .site-timeline-axis {
+    @apply md:col-start-2 md:row-start-1;
+  }
+  .site-timeline-step--right .site-timeline-gutter {
+    @apply hidden md:block md:col-start-1 md:row-start-1;
+  }
+  .site-timeline-panel {
+    @apply w-full max-w-md min-w-0 rounded-2xl border border-app-border/45 bg-gradient-to-br from-app-elevated/70 via-app-surface/50 to-app-bg/90 p-5 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_16px_44px_-22px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/[0.05] md:p-6;
+  }
+  .site-timeline-panel-head {
+    @apply flex items-center;
+  }
+  .site-timeline-step--left .site-timeline-panel-head {
+    @apply justify-end;
+  }
+  .site-timeline-step--right .site-timeline-panel-head {
+    @apply justify-start;
+  }
+  .site-timeline-badge {
+    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-app-accent bg-app-bg font-mono text-sm font-extrabold tabular-nums text-app-accent shadow-[0_0_16px_-6px_rgba(199,62,62,0.5)] md:size-10 md:text-base;
+  }
+  .site-timeline-title {
+    @apply mt-3 text-base font-bold tracking-tight text-app-text md:mt-3.5 md:text-lg;
+  }
+  .site-timeline-body {
+    @apply mt-2 text-sm leading-relaxed text-app-text-muted md:mt-2.5 md:text-[0.9375rem] md:leading-relaxed;
+  }
+  .site-timeline-between {
+    @apply mx-auto my-10 max-w-lg md:my-14;
+  }
+  .site-timeline-between::after {
+    content: "";
+    @apply block h-px w-full bg-gradient-to-r from-transparent via-app-border to-transparent;
+  }
+  .site-timeline-spine--mobile {
+    @apply h-10 w-px shrink-0 bg-gradient-to-b from-app-accent/45 to-app-border/35 md:hidden;
+  }
+  .site-timeline-step:last-child .site-timeline-spine--mobile {
+    @apply hidden;
+  }
+  .site-timeline-axis {
+    @apply relative z-[2] hidden w-full flex-col items-center pt-1 md:flex;
+  }
+  .site-timeline-node {
+    @apply size-4 shrink-0 rounded-full border-[3px] border-app-bg bg-app-accent shadow-[0_0_14px_rgba(199,62,62,0.55)] md:mt-5;
+  }
+  .site-timeline-gutter {
+    @apply min-h-[1px] min-w-0;
+  }
+
+  /* Bento grid */
+  .site-bento {
+    @apply grid auto-rows-fr gap-8 md:grid-cols-12 md:gap-10;
+  }
+  .site-bento-4 {
+    @apply md:col-span-4;
+  }
+  .site-bento-5 {
+    @apply md:col-span-5;
+  }
+  .site-bento-6 {
+    @apply md:col-span-6;
+  }
+  .site-bento-7 {
+    @apply md:col-span-7;
+  }
+  .site-bento-8 {
+    @apply md:col-span-8;
+  }
+  .site-bento-12 {
+    @apply md:col-span-12;
+  }
+
+  /* Metrics */
+  .site-metrics {
+    @apply grid gap-6 sm:grid-cols-3 md:gap-8;
+  }
+  .site-metric {
+    @apply flex flex-col items-center gap-4 rounded-3xl border border-app-border/50 bg-gradient-to-b from-app-elevated/50 to-app-surface/30 px-8 py-11 text-center shadow-[0_6px_28px_-10px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.04];
+  }
+  .site-metric-value {
+    @apply font-mono text-3xl font-bold tracking-tight text-app-accent md:text-4xl;
+  }
+  .site-metric-label {
+    @apply mt-2 text-[0.9375rem] font-medium text-app-text-muted md:text-base;
+  }
+
+  /* Home, section shell (shared with crypto bento + other bands) */
+  .site-showcase-shell {
+    @apply relative overflow-hidden rounded-[1.75rem] border border-app-border/50 bg-gradient-to-br from-app-surface/90 via-app-bg to-app-elevated/40 p-1 shadow-[0_24px_64px_-28px_rgba(0,0,0,0.65)] ring-1 ring-inset ring-white/[0.06];
+  }
+  .site-showcase-shell-glow {
+    @apply pointer-events-none absolute -right-24 -top-24 size-[28rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(199,62,62,0.14),transparent_68%)] opacity-90 blur-2xl;
+  }
+  .site-showcase-shell-inner {
+    @apply relative rounded-[1.6rem] bg-app-bg/40 p-5 md:p-7 lg:p-8;
+  }
+  /* Matches crypto bento primary headline, use under a .site-kicker section label */
+  .site-showcase-title {
+    @apply min-w-0 text-2xl font-extrabold tracking-tight text-app-text md:text-3xl;
+  }
+  /* Small accent label beside .site-crypto-icon-ring (home + crypto blocks) */
+  .site-showcase-eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-app-accent/90;
+  }
+  /* Neutral card label used inside section content (avoid second red heading at section top) */
+  .site-panel-label {
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-app-text-muted;
+  }
+  /* Home, narrative panels aligned with crypto bento cards (icon row + title + copy) */
+  .site-home-story {
+    @apply relative min-w-0 overflow-hidden rounded-2xl border border-app-border/45 bg-gradient-to-br from-app-elevated/70 via-app-surface/50 to-app-bg/90 p-6 ring-1 ring-inset ring-white/[0.05] sm:p-7 md:p-9;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+      0 20px 50px -24px rgba(0, 0, 0, 0.55);
+  }
+  .site-home-story--muted {
+    @apply border-app-border/50 bg-gradient-to-br from-app-elevated/40 via-app-surface/40 to-app-bg/95;
+    box-shadow: 0 16px 44px -22px rgba(0, 0, 0, 0.5);
+  }
+  .site-home-showcase-intro {
+    @apply mx-auto flex min-w-0 max-w-4xl flex-col items-center gap-5 px-0.5 text-center sm:px-0 md:gap-6;
+  }
+  .site-crypto-bento {
+    @apply relative grid min-w-0 gap-5 md:grid-cols-12 md:gap-6;
+  }
+  .site-crypto-bento-main {
+    @apply relative overflow-hidden rounded-2xl border border-app-border/45 bg-gradient-to-br from-app-elevated/70 via-app-surface/50 to-app-bg/90 md:col-span-7 lg:col-span-8;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+      0 20px 50px -24px rgba(0, 0, 0, 0.55);
+  }
+  .site-crypto-bento-main-inner {
+    @apply relative isolate z-0 p-5 sm:p-7 md:p-9 lg:p-10;
+  }
+  .site-crypto-bento-main-inner::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[linear-gradient(125deg,rgba(199,62,62,0.07)_0%,transparent_42%,transparent_100%)];
+  }
+  .site-crypto-icon-ring {
+    @apply inline-flex size-12 items-center justify-center rounded-2xl border border-app-accent/30 bg-app-accent/[0.12] text-app-accent shadow-[0_0_28px_-8px_rgba(199,62,62,0.45)] ring-1 ring-inset ring-white/[0.05];
+  }
+  .site-crypto-icon-ring--sm {
+    @apply size-11 rounded-xl;
+  }
+  .site-crypto-metric-block {
+    @apply relative rounded-xl border border-app-border/35 bg-app-bg/50 p-5 ring-1 ring-inset ring-white/[0.04] md:p-6;
+  }
+  .site-crypto-metric-value {
+    @apply font-mono text-3xl font-bold tracking-tight text-app-accent md:text-4xl;
+  }
+  .site-crypto-metric-label {
+    @apply mt-2 text-sm font-bold text-app-text md:text-base;
+  }
+  .site-crypto-metric-hint {
+    @apply mt-1 text-xs font-medium uppercase tracking-wider text-app-text-muted;
+  }
+  .site-crypto-bar {
+    @apply mt-4 h-2 overflow-hidden rounded-full bg-app-border/50;
+  }
+  .site-crypto-bar-fill {
+    @apply block h-full rounded-full bg-gradient-to-r from-app-accent via-app-accent/80 to-app-accent/50;
+  }
+  .site-crypto-bar-fill--time {
+    @apply w-[42%] shadow-[0_0_20px_-4px_rgba(199,62,62,0.6)];
+  }
+  .site-crypto-bar-fill--mem {
+    @apply w-[72%] bg-gradient-to-r from-app-accent/90 via-app-accent/55 to-app-border/80 shadow-[0_0_16px_-4px_rgba(199,62,62,0.35)];
+  }
+  .site-crypto-bento-stack {
+    @apply flex flex-col gap-5 md:col-span-5 lg:col-span-4;
+  }
+  .site-crypto-bento-card {
+    @apply relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-app-accent/25 bg-gradient-to-b from-app-accent/[0.1] via-app-surface/60 to-app-bg/95 p-6 shadow-[0_16px_40px_-20px_rgba(199,62,62,0.2)] ring-1 ring-inset ring-white/[0.05] md:p-7;
+  }
+  .site-crypto-bento-card-glow {
+    @apply pointer-events-none absolute -right-8 top-0 size-32 rounded-full bg-app-accent/20 blur-3xl;
+  }
+  .site-crypto-bento-card--muted {
+    @apply border-app-border/50 from-app-elevated/40 via-app-surface/40 to-app-bg/95 shadow-[0_12px_36px_-18px_rgba(0,0,0,0.45)];
+  }
+  .site-crypto-chip {
+    @apply rounded-lg border border-app-border/60 bg-app-elevated/80 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-app-text-muted;
+  }
+
+  /* Quote / emphasis strip */
+  .site-quote {
+    @apply relative min-w-0 overflow-hidden rounded-2xl border border-app-border/40 border-l-4 border-l-app-accent bg-gradient-to-br from-app-accent/[0.08] to-app-bg/80 px-5 py-8 shadow-[0_8px_40px_-16px_rgba(199,62,62,0.15)] sm:rounded-3xl sm:px-8 sm:py-10 md:px-12 md:py-12;
+  }
+  .site-quote-text {
+    @apply text-lg font-medium italic leading-relaxed text-app-text/90 md:text-xl;
+  }
+
+  /* Section divider */
+  .site-divider {
+    @apply flex items-center gap-6 py-6 md:py-8;
+  }
+  .site-divider-line {
+    @apply h-px flex-1 bg-gradient-to-r from-transparent via-app-border to-transparent;
+  }
+  .site-divider-label {
+    @apply shrink-0 text-[0.65rem] font-bold uppercase tracking-[0.35em] text-app-text-muted;
+  }
+
+  /* Callouts */
+  .site-callout {
+    @apply rounded-3xl border border-app-border border-l-app-accent bg-app-surface/90 p-7 text-base leading-relaxed text-app-text-muted shadow-[0_4px_20px_-8px_rgba(0,0,0,0.25)] md:p-9;
+  }
+  .site-callout-warn {
+    @apply rounded-3xl border border-app-accent/35 bg-gradient-to-br from-app-accent/[0.09] to-app-bg/60 p-7 text-base leading-relaxed text-app-text-muted shadow-[0_6px_28px_-10px_rgba(199,62,62,0.12)] md:p-9;
+  }
+
+  /* Tables inside cards */
+  .site-table-wrap {
+    @apply max-w-full min-w-0 overflow-x-auto rounded-xl border border-app-border/60 sm:rounded-2xl;
+  }
+  .site-table {
+    @apply w-full min-w-[36rem] text-left text-sm;
+  }
+  .site-table th {
+    @apply border-b border-app-border bg-app-elevated/80 px-5 py-4 font-semibold text-app-text;
+  }
+  .site-table td {
+    @apply border-b border-app-border/60 px-5 py-5 text-app-text-muted;
+  }
+
+  /* Featured trust-zone table (home “What lives where”) */
+  .site-table-wrap--showcase {
+    @apply max-w-full min-w-0 overflow-x-auto rounded-xl border-0 bg-gradient-to-b from-app-elevated/40 to-app-bg/95 shadow-[0_28px_72px_-28px_rgba(0,0,0,0.65)] ring-1 ring-inset ring-white/[0.07] sm:rounded-[1.35rem];
+  }
+  .site-table--showcase {
+    @apply w-full min-w-[42rem] border-collapse text-left;
+  }
+  .site-table--showcase thead {
+    @apply relative;
+  }
+  .site-table--showcase thead tr {
+    @apply bg-gradient-to-r from-app-elevated/90 via-app-elevated/60 to-app-elevated/30;
+  }
+  .site-table--showcase th {
+    @apply border-b border-app-border/50 px-6 py-5 text-[0.7rem] font-extrabold uppercase tracking-[0.22em] text-app-text md:px-10 md:py-6 md:text-xs md:tracking-[0.26em];
+  }
+  .site-table--showcase th:first-child {
+    @apply pl-8 md:pl-12;
+  }
+  .site-table--showcase th:last-child {
+    @apply pr-8 md:pr-12;
+  }
+  .site-table--showcase tbody tr {
+    @apply transition-colors duration-300 hover:bg-app-elevated/25;
+  }
+  .site-table--showcase tbody tr:nth-child(odd) {
+    @apply bg-app-elevated/[0.12];
+  }
+  .site-table--showcase tbody tr:nth-child(even) {
+    @apply bg-transparent;
+  }
+  .site-table--showcase td {
+    @apply border-b border-app-border/35 px-6 py-6 align-middle text-base font-semibold leading-snug text-app-text/92 md:px-10 md:py-7 md:text-lg;
+  }
+  .site-table--showcase td:first-child {
+    @apply pl-8 text-lg font-extrabold tracking-tight text-app-text md:pl-12 md:text-xl;
+  }
+  .site-table--showcase td:last-child {
+    @apply pr-8 md:pr-12;
+  }
+  .site-table--showcase td:nth-child(2) {
+    @apply font-mono text-sm font-medium text-app-text-muted md:text-base;
+  }
+  .site-table--showcase tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .site-table-tag {
+    @apply inline-flex items-center justify-center rounded-full border px-4 py-2 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] shadow-[0_0_24px_-8px_rgba(199,62,62,0.35)] md:px-5 md:py-2.5 md:text-xs md:tracking-[0.18em];
+  }
+  .site-table-tag--accent {
+    @apply border-app-accent/45 bg-app-accent/[0.14] text-app-accent;
+  }
+  .site-table-tag--soft {
+    @apply border-app-border/70 bg-app-elevated/95 font-bold text-app-text-muted shadow-none;
+  }
+
+  /* Hero, shared shell (inner pages); home uses .site-hero-home-* only */
+  .site-hero {
+    @apply relative min-w-0 overflow-hidden border-b border-app-border/80 py-24 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:py-32 md:py-40;
+    @apply sm:pl-8 sm:pr-8;
+  }
+  .site-hero-glow {
+    @apply pointer-events-none absolute inset-0 opacity-[0.09];
+  }
+  .site-hero-inner {
+    @apply relative mx-auto min-w-0 max-w-5xl px-2 text-center sm:px-0;
+  }
+
+  /* Home hero, split editorial + vault frame (theme-aligned, unique layout) */
+  .site-hero--home {
+    @apply border-b-2 border-app-accent/25 bg-app-bg py-16 sm:py-20 md:py-24 lg:py-28;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  }
+  .site-hero-home-backdrop {
+    @apply pointer-events-none absolute inset-0;
+  }
+  .site-hero-home-backdrop-grid {
+    @apply absolute inset-0 opacity-[0.5];
+    background-image:
+      linear-gradient(rgba(232, 232, 232, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232, 232, 232, 0.035) 1px, transparent 1px);
+    background-size: 52px 52px;
+    mask-image: radial-gradient(ellipse 78% 62% at 42% 32%, black 18%, transparent 70%);
+  }
+  .site-hero-home-backdrop-glow {
+    @apply absolute inset-0;
+    background:
+      radial-gradient(ellipse 58% 48% at 8% 18%, rgba(199, 62, 62, 0.24), transparent 58%),
+      radial-gradient(ellipse 52% 44% at 96% 72%, rgba(199, 62, 62, 0.12), transparent 52%),
+      radial-gradient(ellipse 72% 42% at 50% -8%, rgba(199, 62, 62, 0.16), transparent 55%);
+  }
+  .site-hero-home-wrap {
+    @apply relative z-[1] mx-auto w-full min-w-0 max-w-6xl pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))];
+    @apply sm:pl-8 sm:pr-8;
+  }
+  .site-hero-home-grid {
+    @apply grid items-start gap-14 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:items-center lg:gap-12 xl:gap-20;
+  }
+  .site-hero-home-rail {
+    @apply flex gap-5 sm:gap-7;
+  }
+  .site-hero-home-rail-mark {
+    @apply mt-1 w-1 shrink-0 self-stretch rounded-full bg-gradient-to-b from-app-accent from-[6%] via-app-accent/55 to-transparent to-[94%] sm:w-[3px];
+  }
+  .site-hero-home-rail-body {
+    @apply flex min-w-0 flex-col text-left;
+  }
+  .site-hero-home-eyebrow {
+    @apply text-[0.7rem] font-black uppercase tracking-[0.38em] text-app-accent sm:text-xs sm:tracking-[0.4em];
+  }
+  .site-hero-home-brand {
+    @apply mt-4 block text-[clamp(2.65rem,7.2vw,4.35rem)] font-black leading-[0.95] tracking-[-0.045em];
+    text-shadow: 0 2px 28px rgba(0, 0, 0, 0.45);
+  }
+  .site-hero-home-claim {
+    @apply mt-6 block max-w-xl text-balance text-[1.6rem] font-black leading-[1.1] tracking-[-0.03em] text-app-text sm:text-4xl sm:leading-[1.08] md:mt-7 md:max-w-lg md:text-[2.3rem] md:leading-[1.06] lg:max-w-xl lg:text-[2.6rem];
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+  .site-hero-home-lead {
+    @apply mt-6 max-w-xl text-base font-semibold leading-relaxed text-app-text/82 sm:text-lg md:mt-7 md:text-xl md:leading-relaxed;
+  }
+  .site-hero-home-pills {
+    @apply mt-8 flex flex-wrap gap-2 sm:gap-2.5;
+  }
+  .site-hero-home-actions {
+    @apply mt-10 flex flex-wrap items-center gap-3 sm:gap-4 md:mt-11;
+  }
+  .site-hero-home-aside {
+    @apply min-w-0;
+  }
+  .site-hero-home-frame {
+    @apply relative overflow-hidden rounded-[1.65rem] border border-app-border/85 bg-gradient-to-br from-app-surface/95 via-app-bg/90 to-app-bg/95 p-1 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.72),inset_0_0_0_1px_rgba(199,62,62,0.1)];
+  }
+  .site-hero-home-frame::before {
+    content: "";
+    @apply pointer-events-none absolute -left-20 -top-20 h-44 w-44 rounded-full bg-app-accent/18 blur-3xl;
+  }
+  .site-hero-home-frame-inner {
+    @apply relative rounded-[1.35rem] border border-app-border/55 bg-app-elevated/35 px-5 py-5 sm:px-6 sm:py-6 md:px-7 md:py-7;
+  }
+  .site-hero-home-frame-top {
+    @apply mb-5 flex flex-wrap items-center justify-between gap-2 border-b border-app-border/60 pb-4 sm:gap-3;
+  }
+  .site-hero-home-dots {
+    @apply flex shrink-0 gap-1.5;
+  }
+  .site-hero-home-dots span {
+    @apply size-2.5 rounded-full border border-app-border/55;
+  }
+  .site-hero-home-dots span:nth-child(1) {
+    @apply bg-app-accent/40;
+  }
+  .site-hero-home-dots span:nth-child(2) {
+    @apply bg-app-text-muted/22;
+  }
+  .site-hero-home-dots span:nth-child(3) {
+    @apply bg-app-text-muted/12;
+  }
+  .site-hero-home-url {
+    @apply min-w-0 flex-1 basis-full text-left font-mono text-[0.62rem] font-semibold leading-snug tracking-tight text-app-text-muted sm:basis-auto sm:flex-none sm:truncate sm:text-right sm:text-[0.7rem];
+  }
+  .site-hero-home-block-label {
+    @apply text-[0.62rem] font-bold uppercase tracking-[0.2em] text-app-accent/90 sm:text-[0.7rem] sm:tracking-[0.22em];
+  }
+  .site-hero-home-cipher {
+    @apply mt-2 break-all rounded-xl border border-app-border/70 bg-app-bg/85 px-3 py-3 font-mono text-[0.66rem] leading-relaxed text-app-text-muted sm:text-xs;
+  }
+  .site-hero-home-divider {
+    @apply my-5 h-px bg-gradient-to-r from-transparent via-app-border to-transparent;
+  }
+  .site-hero-home-keep {
+    @apply mt-2 list-none space-y-2.5 p-0 text-sm font-semibold text-app-text/90 sm:text-base;
+  }
+  .site-hero-home-keep li {
+    @apply flex items-start gap-2.5 pl-0.5;
+  }
+  .site-hero-home-keep li::before {
+    content: "";
+    @apply mt-2 size-1.5 shrink-0 rounded-full bg-app-accent;
+  }
+  .site-hero-home-frame-foot {
+    @apply mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-app-border/55 pt-4 font-mono text-[0.62rem] font-semibold text-app-text-muted sm:text-xs;
+  }
+
+  /* Monospace command blocks */
+  .site-code-block {
+    @apply rounded-2xl border border-app-border/70 bg-app-bg/60 p-5 font-mono text-xs leading-relaxed text-app-text/90 md:p-6 md:text-[0.8125rem];
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* Pricing (/pricing) — tier cards aligned with vault app numbers & copy    */
+  /* ------------------------------------------------------------------------ */
+  .site-pricing-tier-grid {
+    @apply grid grid-cols-1 gap-x-6 gap-y-6 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0;
+  }
+
+  @media (min-width: 1024px) {
+    .site-pricing-tier-grid {
+      grid-template-rows: auto auto auto auto auto 1fr auto;
+    }
+
+    .site-pricing-tier-grid > .site-pricing-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: subgrid;
+      grid-row: 1 / span 7;
+      min-height: 0;
+    }
+
+    .site-pricing-tier-grid > .site-pricing-card:nth-child(1) {
+      grid-column: 1;
+    }
+
+    .site-pricing-tier-grid > .site-pricing-card:nth-child(2) {
+      grid-column: 2;
+    }
+
+    .site-pricing-tier-grid > .site-pricing-card:nth-child(3) {
+      grid-column: 3;
+    }
+  }
+  .site-pricing-card {
+    @apply flex min-h-full flex-col rounded-2xl border border-app-border/80 bg-app-elevated/25 p-6 text-left shadow-[0_8px_32px_-18px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.04] sm:p-8;
+  }
+  .site-pricing-tier-grid > .site-pricing-card {
+    @apply px-6 pb-6 pt-4 sm:px-8 sm:pb-8 sm:pt-5;
+  }
+  .site-pricing-badge {
+    @apply mb-3 inline-flex w-fit rounded-full border border-app-border/80 bg-app-bg/50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+  }
+  .site-pricing-badge--accent {
+    @apply border-app-accent/50 bg-app-accent/12 text-app-accent;
+  }
+  .site-pricing-flair {
+    @apply mb-0 flex items-start gap-3;
+  }
+  .site-pricing-heading-rule {
+    @apply -mx-6 mb-4 shrink-0 border-t border-app-border/80 sm:-mx-8;
+  }
+  .site-pricing-flair-icon {
+    @apply mt-0.5 flex size-9 shrink-0 items-center justify-center text-app-accent;
+  }
+  .site-pricing-flair-icon svg {
+    @apply size-6;
+  }
+  .site-pricing-flair-copy {
+    @apply m-0 text-sm leading-relaxed text-app-text/95;
+  }
+
+  .site-pricing-import-spotlight {
+    @apply relative mb-10 overflow-hidden rounded-2xl border border-app-border/80 bg-app-bg/40 p-6 shadow-[0_12px_40px_-24px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.05] sm:p-8;
+  }
+  .site-pricing-import-spotlight::before {
+    @apply pointer-events-none absolute inset-y-0 left-0 w-1/2 max-w-md bg-gradient-to-r from-app-accent/16 to-transparent content-[''];
+  }
+  .site-pricing-import-inner {
+    @apply relative flex flex-col gap-5 md:flex-row md:items-center md:gap-8;
+  }
+  .site-pricing-import-icon {
+    @apply flex size-14 shrink-0 items-center justify-center rounded-2xl bg-app-accent/14 text-app-accent ring-1 ring-app-accent/28 md:size-16;
+  }
+  .site-pricing-import-icon svg {
+    @apply size-8;
+  }
+  .site-pricing-import-pill {
+    @apply mb-2 inline-flex rounded-full border border-app-accent/45 bg-app-accent/12 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-app-accent;
+  }
+  .site-pricing-import-title {
+    @apply text-lg font-semibold tracking-tight text-app-text sm:text-xl;
+  }
+  .site-pricing-import-lede {
+    @apply mt-2 max-w-2xl text-sm leading-relaxed text-app-text-muted sm:text-base;
+  }
+  .site-pricing-import-actions {
+    @apply mt-5 flex flex-wrap items-center gap-3 md:mt-0 md:ml-auto md:flex-col md:items-stretch;
+  }
+
+  .site-pricing-name {
+    @apply text-xl font-semibold tracking-tight text-app-text;
+  }
+  .site-pricing-name-row {
+    @apply flex flex-wrap items-center gap-2;
+  }
+  .site-pricing-lifetime-policy-trigger {
+    @apply inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-app-border/80 bg-app-bg/40 text-app-text-muted transition hover:border-app-accent/50 hover:bg-app-accent/10 hover:text-app-accent;
+  }
+  .site-pricing-lifetime-policy-trigger svg {
+    @apply size-[1.125rem];
+  }
+  .site-pricing-dialog-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px];
+  }
+  .site-pricing-dialog-panel {
+    @apply relative max-h-[min(90vh,32rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-app-border/80 bg-app-elevated/95 p-6 text-left shadow-2xl ring-1 ring-white/[0.06] sm:p-8;
+  }
+  .site-pricing-dialog-close {
+    @apply absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-full border border-app-border/70 bg-app-bg/50 text-app-text-muted transition hover:border-app-accent/50 hover:text-app-accent;
+  }
+  .site-pricing-price {
+    @apply mt-4 flex flex-wrap items-baseline gap-1 font-mono text-3xl font-bold tracking-tight text-app-text sm:text-4xl;
+  }
+  .site-pricing-period {
+    @apply text-base font-normal text-app-text-muted;
+  }
+  .site-pricing-blurb {
+    @apply mt-2 text-sm leading-relaxed text-app-text-muted;
+  }
+  .site-pricing-list {
+    @apply mt-6 flex list-none flex-col gap-2.5 p-0 text-sm text-app-text-muted;
+  }
+  .site-pricing-list li {
+    @apply flex gap-2.5 leading-snug;
+  }
+  .site-pricing-list svg {
+    @apply mt-0.5 size-4 shrink-0 text-app-accent;
+  }
+  .site-pricing-list li.site-pricing-list-item--muted {
+    @apply text-app-text-muted;
+  }
+  .site-pricing-list li.site-pricing-list-item--muted svg {
+    @apply text-app-text-muted;
+  }
+  .site-pricing-actions {
+    @apply mt-8 flex flex-col gap-3;
+  }
+  .site-pricing-security-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+  }
+  .site-pricing-security-item {
+    @apply flex gap-3 rounded-xl border border-app-border/70 bg-app-bg/35 p-4;
+  }
+  .site-pricing-security-icon {
+    @apply flex size-10 shrink-0 items-center justify-center rounded-lg bg-app-accent/12 text-app-accent;
+  }
+  .site-pricing-security-icon svg {
+    @apply size-5;
+  }
+}

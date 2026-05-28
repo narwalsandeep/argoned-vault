@@ -1,0 +1,151 @@
+# Deploy the full Docker stack on EC2 after a push to main.
+#
+# EC2 prerequisites (one-time):
+# - Docker Engine + Compose v2 (docker compose)
+# - Git clone of this repo at VAULT_DEPLOY_PATH (deploy key or HTTPS on the server)
+# - SSH login enabled for password authentication **only if policy allows** (often disabled on hardened hosts;
+#   using SSH keys is still preferable operationally — this workflow follows repo convention below.)
+# - api/.env on the server (from api/.env.example; never commit secrets). Use DB_HOST=db for Compose.
+#   Published service ports (`UI_PORT`, `WEBSITE_PORT`, `API_PORT`; Postgres is fixed at host **5454**) must come from api/.env: pass `--env-file ./api/.env` on every
+#   docker compose command (the workflow does this). No separate vault/.env is required.
+#
+# Repository secrets: EC2_SSH_PASSWORD, EC2_HOST, EC2_USER, VAULT_DEPLOY_PATH
+#   VAULT_DEPLOY_PATH = absolute path to clone root (directory containing docker-compose.yml)
+#
+# Flow: CI runs UI + marketing website production builds (fail fast) -> git pull on EC2 ->
+#       docker compose down (release host ports for this project) ->
+#       docker compose --env-file ./api/.env build / migrate / up -d
+#
+# Remote docker uses sudo docker compose (SSH user not in docker group). Needs passwordless sudo on EC2.
+
+name: Deploy vault
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vault-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ui-production:
+    name: UI production build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: npm ci and production build
+        working-directory: ui
+        run: |
+          npm ci
+          npm run build:prod
+
+  build-website-production:
+    name: Website production build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: npm ci and production build
+        working-directory: website
+        run: |
+          npm ci
+          npm run build:prod
+
+  deploy:
+    name: Deploy to EC2
+    needs: [build-ui-production, build-website-production]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Install sshpass (non-interactive SSH password)
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy on EC2 (pull, build, migrate, up)
+        env:
+          SSHPASS: ${{ secrets.EC2_SSH_PASSWORD }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          DEPLOY_PATH: ${{ secrets.VAULT_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          for v in SSHPASS HOST USER DEPLOY_PATH; do
+            eval "x=\$$v"
+            if [ -z "${x:-}" ]; then
+              echo "Missing secret for $v - set EC2_SSH_PASSWORD, EC2_HOST, EC2_USER, VAULT_DEPLOY_PATH."
+              exit 1
+            fi
+          done
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          DEPLOY_ESC=$(printf '%q' "$DEPLOY_PATH")
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            "${USER}@${HOST}" \
+            "cd ${DEPLOY_ESC} && \
+             git fetch origin && \
+             git checkout main && \
+             git pull --ff-only origin main && \
+             sudo docker compose --env-file ./api/.env -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans || true && \
+             sudo docker rm -f blackbox-ui 2>/dev/null || true && \
+             sudo docker rm -f blackbox-website 2>/dev/null || true && \
+             UI_PORT=\$(awk -F= '/^UI_PORT=/{print \$2}' ./api/.env | tail -n 1) && \
+             [ -n \"\$UI_PORT\" ] || UI_PORT=3002 && \
+             echo \"Using UI_PORT=\$UI_PORT from api/.env\" && \
+             CONTAINERS_ON_PORT=\$(sudo docker ps --filter \"publish=\$UI_PORT\" --format '{{.ID}}') && \
+             if [ -n \"\$CONTAINERS_ON_PORT\" ]; then \
+               echo \"Removing containers already publishing :\$UI_PORT\"; \
+               echo \"\$CONTAINERS_ON_PORT\" | xargs -r sudo docker rm -f; \
+             fi && \
+             if sudo ss -tln \"( sport = :\$UI_PORT )\" | grep -q LISTEN; then \
+               echo \"Port :\$UI_PORT is still in use after compose down.\"; \
+               echo \"Listeners:\"; \
+               sudo ss -tlnp \"( sport = :\$UI_PORT )\" || true; \
+               echo \"Docker containers publishing this port:\"; \
+               sudo docker ps --format '{{.Names}}\t{{.Ports}}' | grep \":\$UI_PORT\" || true; \
+               exit 1; \
+             fi && \
+             WEBSITE_PORT=\$(awk -F= '/^WEBSITE_PORT=/{print \$2}' ./api/.env | tail -n 1) && \
+             [ -n \"\$WEBSITE_PORT\" ] || WEBSITE_PORT=3004 && \
+             echo \"Using WEBSITE_PORT=\$WEBSITE_PORT from api/.env\" && \
+             CONTAINERS_WEB=\$(sudo docker ps --filter \"publish=\$WEBSITE_PORT\" --format '{{.ID}}') && \
+             if [ -n \"\$CONTAINERS_WEB\" ]; then \
+               echo \"Removing containers already publishing :\$WEBSITE_PORT\"; \
+               echo \"\$CONTAINERS_WEB\" | xargs -r sudo docker rm -f; \
+             fi && \
+             if sudo ss -tln \"( sport = :\$WEBSITE_PORT )\" | grep -q LISTEN; then \
+               echo \"Port :\$WEBSITE_PORT is still in use after compose down.\"; \
+               sudo ss -tlnp \"( sport = :\$WEBSITE_PORT )\" || true; \
+               exit 1; \
+             fi && \
+             sudo docker compose --env-file ./api/.env -f docker-compose.yml -f docker-compose.prod.yml build && \
+             sudo docker compose --env-file ./api/.env -f docker-compose.yml -f docker-compose.prod.yml run --rm --entrypoint '' api sh -lc 'composer install --no-interaction && composer migrate' && \
+             sudo docker compose --env-file ./api/.env -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans"

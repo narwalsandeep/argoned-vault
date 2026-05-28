@@ -1,0 +1,217 @@
+# Publish a sanitized full-code mirror to the public OSS repository (narwalsandeep/argoned-vault).
+#
+# Trigger: push tag oss-v* (e.g. oss-v1.0.0) or manual workflow_dispatch.
+# Private repo secrets:
+#   OSS_PUBLISH_GITHUB_TOKEN — PAT or GitHub App token with contents:write on public repo
+#   OSS_PUBLIC_REPO          — e.g. narwalsandeep/argoned-vault (default if unset)
+#
+# Flow: tests + production builds → build-export.sh → leak scan → build export →
+#       push to public main + tag vX.Y.Z (oss- prefix stripped) → GitHub Release
+
+name: Publish OSS
+
+on:
+  push:
+    tags:
+      - 'oss-v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to export (commit SHA, branch, or tag)'
+        required: false
+        default: ''
+      version:
+        description: 'Release version (e.g. 1.0.0) — required for workflow_dispatch'
+        required: false
+        default: ''
+
+concurrency:
+  group: publish-oss-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test-and-build:
+    name: Tests and production builds
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            website/package-lock.json
+
+      - name: UI — npm ci and production build
+        working-directory: ui
+        run: |
+          npm ci
+          npm run build:prod
+
+      - name: Website — npm ci and production build
+        working-directory: website
+        run: |
+          npm ci
+          npm run build:prod
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: API — composer install and PHPUnit
+        working-directory: api
+        run: |
+          composer install --no-interaction --prefer-dist
+          ./vendor/bin/phpunit
+
+  export-and-publish:
+    name: Export and publish to public repo
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Verify publish token (fail fast)
+        env:
+          GH_TOKEN: ${{ secrets.OSS_PUBLISH_GITHUB_TOKEN }}
+          OSS_PUBLIC_REPO: ${{ secrets.OSS_PUBLIC_REPO }}
+        run: |
+          set -euo pipefail
+          PUBLIC_REPO="${OSS_PUBLIC_REPO:-narwalsandeep/argoned-vault}"
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "::error::Missing OSS_PUBLISH_GITHUB_TOKEN on narwalsandeep/blackbox (Settings → Secrets → Actions)."
+            exit 1
+          fi
+          echo "Checking token access to ${PUBLIC_REPO}…"
+          gh api "repos/${PUBLIC_REPO}" --jq '.full_name' >/dev/null
+          echo "Token can read ${PUBLIC_REPO}."
+          echo "If push still fails with 403, set Contents: Read and write on a fine-grained PAT — see oss/GITHUB-SECRETS.md"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version and git ref
+        id: meta
+        env:
+          DISPATCH_REF: ${{ github.event.inputs.ref }}
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ -z "$DISPATCH_VERSION" ]]; then
+              echo "workflow_dispatch requires version input (e.g. 1.0.0)"
+              exit 1
+            fi
+            VERSION="$DISPATCH_VERSION"
+            GIT_REF="${DISPATCH_REF:-${{ github.sha }}}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#oss-v}"
+            GIT_REF="$TAG"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "git_ref=$GIT_REF" >> "$GITHUB_OUTPUT"
+          echo "Release version: v${VERSION} (ref: ${GIT_REF})"
+
+      - name: Build export tree
+        run: |
+          chmod +x oss/scripts/build-export.sh oss/scripts/leak-scan.sh
+          ./oss/scripts/build-export.sh \
+            --output "$RUNNER_TEMP/oss-export" \
+            --ref "${{ steps.meta.outputs.git_ref }}"
+
+      - name: Setup Node.js (export build verification)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify production builds on export
+        run: |
+          cd "$RUNNER_TEMP/oss-export/ui"
+          npm ci
+          npm run build:prod
+          cd "$RUNNER_TEMP/oss-export/website"
+          npm ci
+          npm run build:prod
+
+      - name: Setup PHP (export API sanity check)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: API sanity check on export
+        working-directory: ${{ runner.temp }}/oss-export/api
+        run: |
+          composer install --no-interaction --prefer-dist --no-dev
+          php -r "require 'vendor/autoload.php'; echo \"API autoload OK\n\";"
+
+      - name: Push to public repository
+        env:
+          OSS_TOKEN: ${{ secrets.OSS_PUBLISH_GITHUB_TOKEN }}
+          OSS_PUBLIC_REPO: ${{ secrets.OSS_PUBLIC_REPO }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          PUBLIC_REPO="${OSS_PUBLIC_REPO:-narwalsandeep/argoned-vault}"
+          if [[ -z "${OSS_TOKEN:-}" ]]; then
+            echo "Missing secret OSS_PUBLISH_GITHUB_TOKEN"
+            exit 1
+          fi
+          EXPORT="$RUNNER_TEMP/oss-export"
+          WORK="$RUNNER_TEMP/oss-publish"
+          rm -rf "$WORK"
+          mkdir -p "$WORK"
+          cp -a "$EXPORT/." "$WORK/"
+          cd "$WORK"
+          git init -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release ${TAG}"
+          git remote add public "https://x-access-token:${OSS_TOKEN}@github.com/${PUBLIC_REPO}.git"
+          git push --force public main
+          git tag -f "$TAG"
+          git push --force public "$TAG"
+
+      - name: Create GitHub Release on public repo
+        env:
+          GH_TOKEN: ${{ secrets.OSS_PUBLISH_GITHUB_TOKEN }}
+          OSS_PUBLIC_REPO: ${{ secrets.OSS_PUBLIC_REPO }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          PUBLIC_REPO="${OSS_PUBLIC_REPO:-narwalsandeep/argoned-vault}"
+          gh release view "$TAG" --repo "$PUBLIC_REPO" 2>/dev/null && \
+            gh release delete "$TAG" --repo "$PUBLIC_REPO" --yes || true
+          NOTES_FILE=$(mktemp)
+          {
+            echo '## Self-host'
+            echo ''
+            echo '```bash'
+            echo "git clone https://github.com/${PUBLIC_REPO}.git"
+            echo 'cd argoned-vault'
+            echo 'cp api/.env.example api/.env   # configure DB, mail, Stripe, ADMIN_EMAIL'
+            echo 'docker compose --env-file ./api/.env up -d --build'
+            echo '```'
+            echo ''
+            echo "See [docs/self-host.md](https://github.com/${PUBLIC_REPO}/blob/${TAG}/docs/self-host.md) for full instructions."
+            echo ''
+            echo '**License:** MIT. Managed production at [argoned.com](https://argoned.com).'
+          } > "$NOTES_FILE"
+          gh release create "$TAG" \
+            --repo "$PUBLIC_REPO" \
+            --title "Argoned Vault ${TAG}" \
+            --notes-file "$NOTES_FILE"
