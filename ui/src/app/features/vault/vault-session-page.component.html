@@ -1,0 +1,212 @@
+<div class="page-content page-pad--settings settings-page-fill text-left">
+  <div class="settings-layout">
+    <div class="settings-main">
+      <header class="settings-page-header">
+        <h1 class="settings-page-heading">
+          <span class="settings-page-title">Session</span>
+          <span class="settings-page-heading-dot" aria-hidden="true">.</span>
+          <span class="settings-page-kicker">Lock &amp; idle timer</span>
+        </h1>
+      </header>
+
+      <div class="settings-tab-panel" role="region" aria-label="Session: lock and idle timer">
+        <section class="settings-section-card">
+          <div class="vault-session-heading-block">
+            <h2 class="tab-panel-heading">
+              <span class="tab-panel-heading-title">In-memory session</span>
+              <span class="tab-panel-heading-dot" aria-hidden="true">.</span>
+              <span class="tab-panel-heading-kicker">This browser tab</span>
+            </h2>
+            <p class="mt-1 text-xs leading-relaxed text-app-text-muted sm:text-sm">
+              Status, lock, and idle timeout for this tab only; see <span class="font-medium text-app-text/90">Docs</span> on the
+              right for detail.
+            </p>
+          </div>
+          <div
+            class="mt-6 flex flex-col gap-5 border-t border-app-border/55 pt-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8"
+          >
+            <div class="min-w-0 flex-1">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-app-text-muted">Status</p>
+              <div class="mt-2 flex flex-wrap items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  [class.app-shell-vault-status-pip]="vaultSession.isUnlocked()"
+                  [class.app-shell-vault-status-pip--locked]="!vaultSession.isUnlocked()"
+                ></span>
+                <span class="text-xl font-semibold tracking-tight text-app-text sm:text-2xl">
+                  {{ vaultSession.isUnlocked() ? 'Unlocked' : 'Locked' }}
+                </span>
+              </div>
+            </div>
+            <div
+              class="vault-session-primary-actions flex w-full shrink-0 flex-col gap-2 border-t border-app-border/60 pt-4 sm:w-auto sm:border-t-0 sm:pt-0 sm:items-end"
+            >
+              @if (vaultSession.isUnlocked()) {
+                <button
+                  type="button"
+                  class="control-btn-primary w-full justify-center shadow-lg sm:w-max"
+                  aria-label="Lock vault: clear the in-memory vault key in this tab now. Server data is unchanged."
+                  data-bb-session-primary="lock"
+                  (click)="lockVault()"
+                >
+                  <svg class="size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  <span>Lock vault</span>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="control-btn-primary w-full justify-center shadow-lg sm:w-max"
+                  aria-label="Unlock vault: load profile and derive vault key in this tab"
+                  data-bb-session-primary="unlock"
+                  (click)="openUnlockModal()"
+                >
+                  <svg class="size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 11V8a5 5 0 00-9.9-1M7 11h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2z"
+                    />
+                  </svg>
+                  <span>Unlock vault</span>
+                </button>
+              }
+            </div>
+          </div>
+          <div class="mt-8 border-t border-app-border/55 pt-8">
+            <div class="vault-session-idle-auto-lock-block">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-app-text-muted">Idle auto-lock</p>
+              <div class="mt-4">
+                <app-vault-idle-auto-lock-presets />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <aside class="settings-aside" aria-label="Documentation for vault session">
+      <div class="settings-help-panel">
+        <h2 class="settings-help-heading">Docs</h2>
+        <div class="settings-help-hero">
+          <div class="settings-help-hero-icon" aria-hidden="true">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+          </div>
+          <div class="settings-help-hero-text">
+            <p class="settings-help-hero-title">In-context docs</p>
+            <p class="settings-help-hero-sub">
+              Browse and decrypt items on
+              <a [routerLink]="itemsRoute" class="font-medium text-app-main-accent hover:underline">Vault → Items</a>. Ciphertext
+              stays on the server; keys stay in this tab when unlocked.
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-help-callout">
+          <span class="settings-help-callout-icon" aria-hidden="true">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </span>
+          <div>
+            <p class="settings-help-callout-title">This tab only</p>
+            <p class="settings-help-callout-body">
+              While <strong class="font-medium text-app-text">Unlocked</strong>, this tab holds the vault key in memory so items
+              can decrypt. <strong class="font-medium text-app-text">Locked</strong> or logout clears it; other browsers or
+              tabs stay locked until you unlock there too.
+            </p>
+          </div>
+        </div>
+        <p class="settings-help-section-label">Lock vault</p>
+        <div class="settings-help-tips">
+          <div class="settings-help-tip">
+            <span class="settings-help-tip-icon" aria-hidden="true">
+              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </span>
+            <p class="settings-help-tip-body">
+              Ends in-memory access <strong class="font-medium text-app-text">immediately</strong> (no need to wait for the idle
+              timer). Ciphertext on the server is unchanged.
+            </p>
+          </div>
+        </div>
+        <p class="settings-help-section-label">Idle auto-lock</p>
+        <div class="settings-help-tips">
+          <div class="settings-help-tip">
+            <span class="settings-help-tip-icon" aria-hidden="true">
+              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </span>
+            <p class="settings-help-tip-body">
+              Minutes without activity before this tab drops the key. Client-only; not stored on the server. Tap a preset to
+              apply now; while unlocked, a new choice restarts the full idle window from that tap; while locked, your choice
+              applies on the next unlock here. When unlocked, the idle time remaining appears under the green vault status control
+              in the left rail.
+            </p>
+          </div>
+        </div>
+        <p class="settings-help-section-label">Shortcuts</p>
+        <div class="settings-help-nav-links sm:flex-row sm:flex-wrap">
+          <a [routerLink]="settingsPath" class="settings-help-nav-link sm:min-w-[10rem] sm:flex-1" title="Vault profile and recovery">
+            <span class="settings-help-nav-link-title">Settings</span>
+            <span class="settings-help-nav-link-text">Vault profile &amp; recovery</span>
+          </a>
+          <a routerLink="/new" class="settings-help-nav-link sm:min-w-[10rem] sm:flex-1" title="Create new encrypted item">
+            <span class="settings-help-nav-link-title">Create</span>
+            <span class="settings-help-nav-link-text">New encrypted items</span>
+          </a>
+        </div>
+
+        <p class="settings-help-section-label">More</p>
+        <a
+          routerLink="/docs"
+          class="inline-flex items-center gap-2 rounded-lg border border-app-border bg-app-elevated/60 px-3 py-2 text-sm font-medium text-app-main-accent transition hover:bg-app-elevated"
+        >
+          <svg class="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          <span>Open full Docs</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <app-vault-quick-unlock-dialog
+    [open]="unlockModalOpen()"
+    heading="Unlock vault"
+    subtext="Enter your vault unlock secret to change idle auto-lock or lock the vault on this tab. Your secret stays in this browser and is never sent as plaintext."
+    (unlocked)="onQuickUnlockSuccess()"
+    (cancelled)="onQuickUnlockCancelled()"
+  />
+</div>
