@@ -1,0 +1,241 @@
+<div class="app-shell">
+  <aside class="app-rail app-rail--start" aria-label="Main navigation">
+    <div class="app-rail-nav-stack">
+      <ng-template #leftNavIcon let-icon="icon">
+        @switch (icon) {
+          @case ('home') {
+            <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+              />
+            </svg>
+          }
+          @case ('create') {
+            <svg class="size-6" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+          }
+          @case ('vault') {
+            <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+          }
+          @case ('clock') {
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          @case ('pricing') {
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+          }
+          @case ('subscription') {
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+          }
+          @case ('alert') {
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+          }
+          @case ('settings') {
+            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          }
+        }
+      </ng-template>
+
+      @for (item of navItems; track item.route) {
+        @if (item.gateWithVaultUnlock) {
+          <button
+            type="button"
+            [attr.aria-label]="item.label"
+            [attr.aria-current]="isLeftNavRouteActive(item.route) ? 'page' : null"
+            [class]="leftNavGatedButtonClass(item)"
+            (click)="onLeftNavGatedClick(item)"
+          >
+            <ng-container *ngTemplateOutlet="leftNavIcon; context: { icon: item.icon }" />
+          </button>
+        } @else {
+          <a
+            [routerLink]="item.route"
+            [attr.aria-label]="item.label"
+            [class]="shellNavLinkClass(item.icon)"
+            routerLinkActive="app-shell-nav-link--active"
+            ariaCurrentWhenActive="page"
+          >
+            <ng-container *ngTemplateOutlet="leftNavIcon; context: { icon: item.icon }" />
+          </a>
+        }
+      }
+      @if (vaultSession.isUnlocked()) {
+        <div class="app-shell-vault-status-stack">
+          <button
+            type="button"
+            aria-label="Lock vault now"
+            title="Lock vault now"
+            class="app-shell-nav-link app-shell-nav-link--vault-unlocked-status"
+            (click)="lockVaultFromSidebar()"
+          >
+            <span class="app-shell-vault-status-pip-slot" aria-hidden="true">
+              <span class="app-shell-vault-status-pip"></span>
+            </span>
+          </button>
+          <app-shell-idle-lock-countdown />
+        </div>
+      }
+    </div>
+    <div class="app-shell-rail-foot mt-auto flex w-full flex-col items-center gap-3 pt-4">
+      @if (showAdminCustomersLink()) {
+        <a
+          routerLink="/admin/customers"
+          class="app-shell-nav-link app-shell-nav-link--muted"
+          routerLinkActive="app-shell-nav-link--active"
+          ariaCurrentWhenActive="page"
+          aria-label="Customers"
+          title="Customers"
+        >
+          <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.433-2.254M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.646-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+            />
+          </svg>
+        </a>
+      }
+      <div aria-hidden="true">
+        <span class="app-shell-brand-mark">a<span class="app-shell-brand-mark-dot">.</span></span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-main-scroll" role="region" aria-label="Main content">
+      <router-outlet />
+    </div>
+  </main>
+
+  <aside class="app-rail app-rail--end" aria-label="Secondary navigation">
+    <div class="app-rail-end-stack">
+      @for (item of rightNavItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          [attr.aria-label]="item.label"
+          [attr.title]="item.label"
+          [class]="shellIconBtnClass(item.icon)"
+          routerLinkActive="app-shell-icon-btn--active"
+          ariaCurrentWhenActive="page"
+        >
+          @switch (item.icon) {
+            @case ('profile') {
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            }
+            @case ('alert') {
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            }
+            @case ('subscription') {
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            }
+            @case ('docs') {
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19.5 14.25v4.125c0 .621-.504 1.125-1.125 1.125H5.625A1.125 1.125 0 014.5 18.375V5.625c0-.621.504-1.125 1.125-1.125H14.25m-1.5 3h6.75m-6.75 3h6.75m-10.5 3h3.75"
+                />
+              </svg>
+            }
+            @case ('logout') {
+              <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            }
+          }
+        </a>
+      }
+    </div>
+  </aside>
+
+  <app-vault-quick-unlock-dialog
+    [open]="addUnlockModalOpen()"
+    [heading]="leftNavUnlockHeading()"
+    [subtext]="leftNavUnlockSubtext()"
+    (unlocked)="onAddUnlockSuccess()"
+    (cancelled)="onAddUnlockCancel()"
+  />
+
+  <app-shell-modal
+    [open]="vaultLockedNoticeOpen()"
+    titleId="master-layout-vault-locked-notice-title"
+    heading="Vault locked"
+    subtext="The vault encryption key was cleared from this browser tab. Enter your unlock secret again when you want to decrypt items."
+    headerIcon="vault-lock-static"
+    [showPrimaryFooter]="true"
+    primaryButtonLabel="Got it"
+    closeAriaLabel="Close"
+    (dismissed)="onVaultLockedNoticeDismissed()"
+  />
+</div>

@@ -1,0 +1,61 @@
+/**
+ * Short security-minded quotations for dashboard and onboarding copy.
+ * Single sentence each; pick randomly via {@link getRandomSecurityQuote}.
+ */
+export const SECURITY_QUOTES: readonly string[] = [
+  'Strong passwords are your first line of defense.',
+  'Never share recovery codes or vault secrets with anyone.',
+  'Two-factor authentication adds a second lock to your account.',
+  'Keep your apps and OS updated to close known gaps.',
+  'Phishing mimics trust, pause before you click or sign in.',
+  'Your vault is only as safe as your device and daily habits.',
+  'Store recovery keys offline in a place only you control.',
+  'Public Wi‑Fi is fine for browsing, risky for sensitive logins.',
+  'Lock your screen whenever you step away from your desk.',
+  'Security is a habit you renew, not a box you check once.',
+  'If a link feels urgent, it may be designed to bypass your judgment.',
+  'Encryption means little if someone else holds your passphrase.',
+  'Reusing passwords is one stolen login away from many breaches.',
+  'A moment of caution beats weeks of cleanup after a breach.',
+  'Verify unexpected requests for credentials through a second channel.',
+  'Long, unique passphrases beat short clever ones every time.',
+  'Attackers exploit hurry, slow down when something feels off.',
+  'Plan recovery before you need it; panic is a poor advisor.',
+  'Lost devices hurt less when access is locked and revocable.',
+  'Good security feels invisible until the day it saves you.',
+  'Read domain names carefully; tiny typos hide large traps.',
+  'Keep secrets out of email and chat, use your vault instead.',
+  'Installing updates is boring; skipping them is expensive.',
+  'Treat your recovery kit like a spare key to your home.',
+  'Think twice before granting broad permissions to new apps.',
+  'Awareness is the cheapest insurance you will ever carry.',
+  'One weak link can undo an otherwise strong setup.',
+  'Separate work and personal accounts to limit blast radius.',
+  'Stay calm when an alert demands action, verify the source first.',
+  'Layered defenses beat betting everything on one password.',
+  'Log out on shared or borrowed machines, always.',
+  'Paper backups can outlive a hacked inbox for recovery secrets.',
+  'Assume unfamiliar networks are hostile until proven otherwise.',
+  'Convenience nudges you toward risk, choose balance on purpose.',
+  'Basics done daily beat fancy tools used once.',
+  'Your future self thanks you for locking things down today.',
+  'Security is preparedness, not paranoia.',
+  'Confirm senders before you open attachments or follow links.',
+  'When in doubt, open a new tab and type the site yourself.',
+  'Auto-lock turns a forgotten session into a protected one.',
+  'Recovery is not failure, expecting zero mistakes is.',
+  'Peace of mind starts with knowing who can access what.',
+  'Shortcuts in security tend to become long-term problems.',
+  'Protect your laptop like you protect your wallet and keys.',
+  'One verified channel beats ten rushed taps on a fake page.',
+  'Small daily choices compound into real safety over time.',
+  'Your data stays yours when keys and encryption stay yours.',
+  'Trust is earned; never hand it over to a pop-up alone.',
+  'Backups you have tested beat backups you only believe exist.',
+  'Staying secure is mostly consistency, not complexity.',
+];
+
+export function getRandomSecurityQuote(): string {
+  const index = Math.floor(Math.random() * SECURITY_QUOTES.length);
+  return SECURITY_QUOTES[index] ?? SECURITY_QUOTES[0] ?? '';
+}
