@@ -1,0 +1,89 @@
+<section class="vault-item-detail-body" aria-label="Encrypted attachments">
+  <h3 class="vault-item-detail-heading vault-item-detail-heading--split vault-file-attach-heading">
+    <span class="min-w-0">Files</span>
+    @if (!loading()) {
+      <span class="flex shrink-0 items-center gap-2">
+        <input
+          #vaultAttachInput
+          type="file"
+          class="sr-only"
+          multiple
+          [disabled]="uploading() || remainingSlots() === 0"
+          (change)="onFilesSelected($event)"
+        />
+        <button
+          type="button"
+          class="vault-file-attach-add-btn"
+          [disabled]="uploading() || remainingSlots() === 0"
+          (click)="openAttachPicker(vaultAttachInput)"
+        >
+          <svg class="size-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L6 8m4-4v12" />
+          </svg>
+          <span>{{ uploading() ? 'Uploading…' : 'Add files' }}</span>
+        </button>
+      </span>
+    }
+  </h3>
+
+  @if (loading()) {
+    <p class="px-4 py-3 text-sm text-app-text-muted">Loading attachments…</p>
+  } @else {
+    <div class="vault-file-attach-body">
+      @if (files().length === 0) {
+        <p class="text-sm text-app-text-muted">No files yet. Attach up to {{ maxPerItem() }} encrypted files (20 MB each).</p>
+      } @else {
+        <ul class="m-0 list-none divide-y divide-app-border/55 p-0" role="list">
+          @for (f of files(); track f.id) {
+            <li class="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0" role="listitem">
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-app-text" [attr.title]="f.original_filename">{{ f.original_filename }}</p>
+                <p class="text-xs text-app-text-muted">
+                  {{ humanBytes(plaintextSize(f)) }} · {{ f.mime_type }}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  class="vault-item-detail-copy"
+                  [title]="'Download ' + f.original_filename"
+                  [attr.aria-label]="'Download ' + f.original_filename"
+                  (click)="downloadFile(f.id)"
+                  [disabled]="uploading()"
+                >
+                  <svg class="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                </button>
+                @if (allowFileRemove()) {
+                  <button
+                    type="button"
+                    class="vault-item-detail-copy !border-red-500/45 text-red-600 hover:!border-red-500/70 hover:!bg-red-500/10 hover:!text-red-500"
+                    [title]="'Remove ' + f.original_filename"
+                    [attr.aria-label]="'Remove ' + f.original_filename"
+                    (click)="deleteFile(f.id)"
+                    [disabled]="uploading()"
+                  >
+                    <svg class="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</section>

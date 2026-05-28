@@ -1,0 +1,154 @@
+# 🔐 Vault Pricing Strategy – Item-Based Model
+
+## 🧭 Overview
+
+This pricing model is based on **limiting the number of vault items** a user can store.
+
+It is designed to be:
+- Simple
+- Easy to understand
+- Easy to enforce
+- Effective for conversion
+
+---
+
+## 🎯 Core Model
+
+### 🟢 Free Plan
+- Store up to **8 vault items**
+- Full encryption (never restricted)
+- Core vault functionality
+- Local storage + manual backup
+
+---
+
+### 🔵 Pro Plan (€4–€6/month OR €30–€50/year)
+- Store up to **64 vault items**
+- Advanced credential types (API keys, SSH, tokens)
+- Encrypted file attachments
+- Advanced search & tagging
+- Recovery system
+- Auto-lock & session controls
+
+---
+
+## ⚠️ Why NOT 4 Items?
+
+Originally considered:
+- Free → 4 items
+
+**Problem:**
+- Too restrictive
+- Users don’t experience enough value
+- Lower trust and conversion
+
+---
+
+## ✅ Why 8 Items Works Better
+
+- Enough for real usage (email, bank, 2–3 accounts, API key, etc.)
+- Users experience product value
+- Still creates upgrade pressure
+
+---
+
+## 💡 Positioning (Important)
+
+Avoid negative phrasing:
+
+❌ “Limited to 8 items”  
+✅ “Store up to 8 secure items”
+
+---
+
+## 🚀 Upgrade Triggers
+
+### Hard Limit Reached
+
+Show:
+
+> “You’ve reached your secure item limit.  
+Upgrade to Pro to store up to 64 items and unlock advanced features.”
+
+---
+
+### Soft Warning (Recommended at ~75%)
+
+Example:
+
+> “You’re using 6 of 8 secure items.”
+
+**Why:**
+- Prepares users psychologically
+- Increases conversion rates
+
+---
+
+## 🧩 What Counts as an Item
+
+Vault items include:
+- Login credentials
+- API keys
+- Secure notes
+- Tokens / secrets
+
+Do NOT count:
+- Settings
+- System metadata
+- Internal vault configuration
+
+---
+
+## 🧠 Why Item Limits Work
+
+- Each item has high perceived value
+- Feels fair (not arbitrary)
+- Encourages structured usage
+- Natural upgrade path
+
+---
+
+## 🆚 Competitive Context
+
+| Product | Free Limit |
+|--------|-----------|
+| Bitwarden | Unlimited |
+| KeePass | Unlimited |
+| 1Password | No free plan |
+| Your Product | Item-based limit |
+
+**Your differentiation:**
+- Simplicity
+- Structured secrets model
+- Strong security architecture
+
+---
+
+## ⚠️ Strategic Considerations
+
+- Hard limits require strong onboarding
+- Users must see value quickly
+- UX must feel smooth and trustworthy
+
+---
+
+## 💰 Pricing Alignment
+
+| Plan | Price | Limit |
+|------|------|------|
+| Free | €0 | 8 items |
+| Pro | ~€5/month | 64 items |
+
+Optional:
+- Lifetime plan (€39–€79)
+
+---
+
+## 🏁 Summary
+
+This model provides:
+- Clear upgrade path
+- Strong monetization lever
+- Simple user understanding
+
+> Start users small → let them experience value → upgrade naturally

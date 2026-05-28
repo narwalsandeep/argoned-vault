@@ -1,0 +1,436 @@
+<div class="page-content page-pad--settings settings-page-fill text-left">
+  <div class="app-page-layout">
+    <div class="app-page-main app-page-main--full">
+      <header class="settings-page-header">
+        <h1 class="settings-page-heading">
+          <span class="settings-page-title">Pricing</span>
+          <span class="settings-page-heading-dot" aria-hidden="true">.</span>
+          <span class="settings-page-kicker">Tiers and upgrades—same client-side encryption on every plan</span>
+        </h1>
+      </header>
+
+      @if (summaryFailed()) {
+        <p class="mb-6 text-sm text-app-text-muted" role="status">
+          We could not load your current plan. You can still compare tiers below; open
+          <a routerLink="/subscription" class="font-medium text-app-main-accent hover:underline">Billing</a>
+          to confirm billing.
+        </p>
+      }
+
+      @if (checkoutError()) {
+        <p class="mb-6 text-sm text-red-300" role="alert">{{ checkoutError() }}</p>
+      }
+
+      <aside class="pricing-import-spotlight mb-10" aria-labelledby="pricing-import-title">
+        <div class="pricing-import-spotlight-inner">
+          <div class="pricing-import-spotlight-icon-wrap" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5M4.5 3.75h15a.75.75 0 0 1 .75.75v15a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75v-15a.75.75 0 0 1 .75-.75Z"
+              />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="pricing-import-spotlight-pill">
+              @if (showLifetimeOnPricing) {
+                Pro &amp; Lifetime
+              } @else {
+                Pro
+              }
+            </p>
+            <h2 id="pricing-import-title" class="pricing-import-spotlight-title">Bring every password in with one encrypted import</h2>
+            <p class="pricing-import-spotlight-lede">
+              Drop a <strong class="text-app-text">CSV</strong> or <strong class="text-app-text">JSON</strong> export from your old manager (or a custom dump).
+            </p>
+          </div>
+          <div class="pricing-import-spotlight-actions">
+            <a
+              routerLink="/new/import"
+              class="btn-secondary inline-flex w-full items-center justify-center gap-2 whitespace-nowrap text-center sm:w-max"
+            >
+              Open import hub
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      @if (!showLifetimeOnPricing && isCurrentPlan('lifetime')) {
+        <p class="mb-6 rounded-xl border border-app-border/80 bg-app-elevated/30 px-4 py-3 text-sm text-app-text-muted" role="status">
+          You are on the <span class="font-medium text-app-text">Lifetime</span> plan. Tier details for Lifetime are
+          available on <a routerLink="/subscription" class="font-medium text-app-main-accent hover:underline">Billing</a>.
+        </p>
+      }
+
+      <div class="pricing-tier-grid mb-12" [class.pricing-tier-grid--two-tiers]="!showLifetimeOnPricing">
+        <!-- Free -->
+        <article class="pricing-tier-card">
+          <div class="pricing-tier-flair">
+            <div class="pricing-tier-flair-icon" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                />
+              </svg>
+            </div>
+            <p class="pricing-tier-flair-copy m-0">
+              Free is free forever with no card required, and it is honestly amazing. Stay as safe as possible without opening
+              your wallet; we will still cheer for you from the sidelines.
+            </p>
+          </div>
+          <div class="pricing-tier-heading-rule" role="presentation"></div>
+          <div class="pricing-tier-name-row">
+            <h2 class="pricing-tier-name m-0">Free</h2>
+          </div>
+          <p class="pricing-tier-price">£0 <span class="pricing-tier-period">forever</span></p>
+          <p class="pricing-tier-blurb">Perfect for trying Argoned or a small personal vault.</p>
+          <ul class="pricing-tier-list list-none p-0" role="list">
+            @for (f of planFeatures('free'); track f; let i = $index) {
+              <li [class.pricing-tier-list-item--muted]="i === planFeatures('free').length - 1" role="listitem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    [attr.d]="i === planFeatures('free').length - 1 ? 'M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636' : 'M5 13l4 4L19 7'"
+                  />
+                </svg>
+                <span>{{ f }}</span>
+              </li>
+            }
+          </ul>
+          <div class="pricing-tier-actions">
+            @if (isCurrentPlan('free')) {
+              <p class="pricing-tier-plan-status m-0" aria-current="true">
+                <svg class="pricing-tier-plan-status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Current plan</span>
+              </p>
+            } @else if (freeTierCtaLabel() === 'Downgrade') {
+              @if (isCurrentPlan('pro')) {
+                <button
+                  type="button"
+                  class="btn-primary inline-flex w-full min-w-0 items-center justify-center gap-2 text-center"
+                  [disabled]="downgradeFromPricingBusy()"
+                  (click)="onDowngradeToFreeFromPricing()"
+                >
+                  @if (downgradeFromPricingBusy()) {
+                    Downgrading…
+                  } @else {
+                    Downgrade
+                  }
+                </button>
+              } @else {
+                <a
+                  routerLink="/subscription/downgrade"
+                  class="btn-primary inline-flex w-full items-center justify-center gap-2 text-center"
+                >
+                  Downgrade
+                </a>
+              }
+            } @else {
+              <a
+                routerLink="/pricing"
+                fragment="pricing-plan-pro"
+                class="btn-primary inline-flex w-full items-center justify-center gap-2 text-center"
+              >
+                Upgrade
+              </a>
+            }
+          </div>
+        </article>
+
+        <!-- Pro -->
+        <article class="pricing-tier-card" aria-label="Pro plan" id="pricing-plan-pro">
+          <div class="pricing-tier-flair">
+            <div class="pricing-tier-flair-icon" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3.75 13.5 10.5 2.25 12 9 21 8.25 12.75 21.75 11.25 15 3 15.75 3.75 13.5Z"
+                />
+              </svg>
+            </div>
+            <p class="pricing-tier-flair-copy m-0">
+              About the price of one chai latte a month for us: you keep the cup, we keep your passwords absurdly safe. Every
+              future upgrade ships to you at no extra charge.
+            </p>
+          </div>
+          <div class="pricing-tier-heading-rule" role="presentation"></div>
+          <div class="pricing-tier-name-row">
+            <h2 class="pricing-tier-name m-0">Pro</h2>
+          </div>
+          <p class="pricing-tier-price">
+            £1.99 <span class="pricing-tier-period">/ month · GBP</span>
+          </p>
+          <p class="pricing-tier-blurb">More room for teams and power users who live out of the vault.</p>
+          <ul class="pricing-tier-list list-none p-0" role="list">
+            @for (f of planFeatures('pro'); track f) {
+              <li role="listitem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ f }}</span>
+              </li>
+            }
+          </ul>
+          <div class="pricing-tier-actions">
+            @if (isCurrentPlan('pro')) {
+              <p class="pricing-tier-plan-status m-0" aria-current="true">
+                <svg class="pricing-tier-plan-status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Current plan</span>
+              </p>
+            } @else {
+              <a
+                routerLink="/pricing"
+                [queryParams]="{ plan: 'pro' }"
+                class="btn-primary inline-flex w-full items-center justify-center gap-2 text-center"
+                [class.pointer-events-none]="simulateProBusy()"
+                [class.opacity-60]="simulateProBusy()"
+                [attr.aria-busy]="simulateProBusy() || null"
+              >
+                @if (simulateProBusy()) {
+                  Upgrading…
+                } @else {
+                  Upgrade to Pro
+                }
+              </a>
+            }
+          </div>
+        </article>
+
+        @if (showLifetimeOnPricing) {
+        <!-- Lifetime -->
+        <article class="pricing-tier-card">
+          <div class="pricing-tier-flair">
+            <div class="pricing-tier-flair-icon" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+                />
+              </svg>
+            </div>
+            <p class="pricing-tier-flair-copy m-0">
+              Pay once, party forever: maximum vault, minimum subscription fatigue. It is the deluxe seatbelt you buy before
+              you even know you will need it, and yes, it still sparkles.
+            </p>
+          </div>
+          <div class="pricing-tier-heading-rule" role="presentation"></div>
+          <div class="pricing-tier-name-row">
+            <h2 class="pricing-tier-name m-0">Lifetime</h2>
+            <button
+              type="button"
+              class="pricing-lifetime-policy-trigger"
+              aria-label="Lifetime availability, discontinuation notice, and refunds"
+              [attr.aria-expanded]="lifetimePolicyModalOpen()"
+              (click)="openLifetimePolicyModal()"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </div>
+          <p class="pricing-tier-price">
+            £99 <span class="pricing-tier-period">one-time · GBP</span>
+          </p>
+          <p class="pricing-tier-blurb">
+            Maximum vault capacity for a single payment, ideal if you prefer pay-once over a subscription.
+          </p>
+          <ul class="pricing-tier-list list-none p-0" role="list">
+            @for (f of planFeatures('lifetime'); track f) {
+              <li role="listitem">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ f }}</span>
+              </li>
+            }
+          </ul>
+          <div class="pricing-tier-actions">
+            @if (isCurrentPlan('lifetime')) {
+              <p class="pricing-tier-plan-status m-0" aria-current="true">
+                <svg class="pricing-tier-plan-status-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Current plan</span>
+              </p>
+            } @else {
+              <div class="pricing-tier-coming-soon" role="status" aria-label="Lifetime plan, coming soon">
+                <span class="pricing-tier-coming-soon-icon" aria-hidden="true">
+                  <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.75"
+                      d="M12 6v6l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </span>
+                <span class="pricing-tier-coming-soon-copy">
+                  <span class="pricing-tier-coming-soon-title">Coming soon</span>
+                  <span class="pricing-tier-coming-soon-sub">Pay-once checkout will open here</span>
+                </span>
+              </div>
+            }
+          </div>
+        </article>
+        }
+      </div>
+
+      <div class="settings-section-card mb-8 p-6 sm:p-8">
+        <h2 class="tab-panel-heading mb-2">
+          <span class="tab-panel-heading-title">Security &amp; product</span>
+          <span class="tab-panel-heading-dot" aria-hidden="true">.</span>
+          <span class="tab-panel-heading-kicker">What you get on every plan</span>
+        </h2>
+        <p class="mb-6 w-full max-w-none text-sm leading-relaxed text-app-text-muted">
+          We don’t sell tiers that strip encryption. Limits are about capacity; the vault model stays the same.
+        </p>
+        <div class="pricing-security-grid">
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">AES-256-GCM envelopes</p>
+              <p class="mt-1 text-sm text-app-text-muted">Per-item keys wrapped under your vault key, encrypted in the browser before upload.</p>
+            </div>
+          </div>
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">Argon2id vault unlock</p>
+              <p class="mt-1 text-sm text-app-text-muted">Memory-hard KDF with server-stored salt and parameters, no plaintext master key on disk.</p>
+            </div>
+          </div>
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">Session &amp; CSRF hygiene</p>
+              <p class="mt-1 text-sm text-app-text-muted">Cookie auth with CSRF on mutating API calls; vault key cleared on lock or logout.</p>
+            </div>
+          </div>
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">Recovery artifacts</p>
+              <p class="mt-1 text-sm text-app-text-muted">Optional recovery material separate from your login password, export an emergency kit from Settings.</p>
+            </div>
+          </div>
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">Typed credentials</p>
+              <p class="mt-1 text-sm text-app-text-muted">Website, database, SSH-style flows with room to grow, same vault encryption for each subtype.</p>
+            </div>
+          </div>
+          <div class="pricing-security-item">
+            <div class="pricing-security-item-icon" aria-hidden="true">
+              <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-app-text">Updates for everyone</p>
+              <p class="mt-1 text-sm text-app-text-muted">New features and hardening ship to every tier, limits stay about item counts, not trust.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center text-sm text-app-text-muted">
+        Questions? Peek at <a routerLink="/docs" class="font-medium text-app-main-accent hover:underline">Documentation</a>,
+        <a [href]="repoUrl" class="font-medium text-app-main-accent hover:underline" target="_blank" rel="noopener noreferrer">view the repo on GitHub</a>,
+        or open a discussion there.
+      </p>
+    </div>
+  </div>
+
+  @if (showLifetimeOnPricing) {
+  <app-shell-modal
+    [open]="lifetimePolicyModalOpen()"
+    [heading]="'Lifetime availability & refunds'"
+    [subtext]="'Pay-once tier: continuity, export, and refund window.'"
+    [headerIcon]="'none'"
+    [showPrimaryFooter]="true"
+    [primaryButtonLabel]="'Got it'"
+    [bodyAlign]="'left'"
+    [titleId]="'pricing-lifetime-policy-title'"
+    (dismissed)="closeLifetimePolicyModal()"
+  >
+    <div class="mt-2 space-y-3 text-sm leading-relaxed text-app-text-muted">
+      <p>
+        Lifetime is available while Argoned is operated. If we discontinue the service, we will give at least 30 calendar
+        days’ notice and, during that notice period, send a vault data export to your account email. Refunds, if offered,
+        may be requested only within the first 30 days after purchase; see
+        <a routerLink="/terms" class="font-medium text-app-main-accent hover:underline">Terms</a>.
+      </p>
+    </div>
+  </app-shell-modal>
+  }
+</div>
