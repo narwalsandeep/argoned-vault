@@ -1,0 +1,29 @@
+/**
+ * Central CSS pipeline (single entry from src/styles.css → angular.json).
+ *
+ * Order: Tailwind base → theme tokens → global layout / reusable UI (no per-component .css files).
+ * - theme.css: @theme only (colors, fonts, control sizing tokens).
+ * - layout.css: app shell, pages, `.control-*` form primitives, settings, auth, forms, toast, custom elements.
+ */
+@import "tailwindcss";
+@import "./theme.css";
+
+/**
+ * Named utility so @apply scroll-themed works in layout.css (Tailwind does not @apply arbitrary custom classes).
+ * Firefox scrollbar styling; WebKit pseudo-elements stay in layout.css next to the scroll regions.
+ */
+@utility scroll-themed {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-app-border) var(--color-app-bg);
+}
+
+@import "./layout.css";
+
+/**
+ * Global typography: one font stack for the whole app (smooth rendering).
+ */
+@layer base {
+  html {
+    @apply font-sans antialiased;
+  }
+}
