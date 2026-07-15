@@ -1,0 +1,34 @@
+# OSS export manifest. Private source: narwalsandeep/blackbox.
+# Consumed by oss/scripts/build-export.sh and publish-oss.yml.
+
+include:
+  - "**/*"
+
+exclude:
+  - api/.env
+  - api/.env.local
+  - api/.env.production
+  - "**/*.pem"
+  - "**/*.key"
+  - "**/secrets/**"
+  - .git/**
+  - website/**
+  - docs/**
+  - pricing
+  - .github/**
+
+# Never exclude api/.env.example — self-hosters copy it to api/.env.
+
+add:
+  - src: oss/LICENSE-MIT
+    dest: LICENSE
+
+# OSS-specific files copied over the private-repo versions on export.
+replace:
+  - src: oss/README-PUBLIC.md
+    dest: README.md
+  - src: oss/SELF-HOST.md
+    dest: SELF-HOST.md
+
+# Post-copy patches (compose/env) — see oss/scripts/strip-website-export.sh
+strip_website: true
