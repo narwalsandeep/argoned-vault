@@ -1,0 +1,293 @@
+<div class="page-content page-pad--settings settings-page-fill text-left">
+  <div class="settings-layout">
+    <div class="settings-main">
+      <header class="settings-page-header">
+        <h1 class="settings-page-heading">
+          <span class="settings-page-title">Create</span>
+          <span class="settings-page-heading-dot" aria-hidden="true">.</span>
+          <span class="settings-page-kicker">Choose a type—AES-256-GCM in-browser; categories are organization, not security</span>
+        </h1>
+      </header>
+
+      <ul class="create-choice-grid mb-2 list-none p-0" role="list">
+        <li class="create-choice-grid__import min-w-0">
+          @if (vaultImportAllowed()) {
+            <a routerLink="/new/import" class="create-choice-card create-choice-card--import">
+              <div class="create-choice-card__icon" aria-hidden="true">
+                <span class="shrink-0 text-app-text-muted transition">
+                  <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L6 8m4-4v12"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="create-choice-card__body">
+                <div class="create-choice-card__title-row">
+                  <span class="create-choice-card__title">Import vault items</span>
+                </div>
+                <p class="create-choice-card__desc">
+                  Paste <strong class="font-medium text-app-text">JSON</strong> (arrays or common export wrappers) or
+                  <strong class="font-medium text-app-text">CSV</strong> with a header row; either way you get the same preview,
+                  optional field mapping, and client-side encryption before upload.
+                </p>
+              </div>
+            </a>
+          } @else {
+            <a
+              routerLink="/subscription"
+              [queryParams]="{ from: 'import' }"
+              class="create-choice-card create-choice-card--import create-choice-card--upgrade"
+            >
+              <div class="create-choice-card__icon" aria-hidden="true">
+                <span class="shrink-0 text-app-text-muted transition">
+                  <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L6 8m4-4v12"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="create-choice-card__body">
+                <div class="create-choice-card__title-row">
+                  <span class="create-choice-card__title">Import vault items</span>
+                  <span class="create-choice-card__badge create-choice-card__badge--upgrade">Paid plans</span>
+                </div>
+                <p class="create-choice-card__desc">
+                  Free plan: no bulk import. Paid plans: import JSON/CSV with preview and field mapping, with the same
+                  client-side encryption model.
+                </p>
+                <p class="create-choice-card__upgrade-cta">View plans &#8594;</p>
+              </div>
+            </a>
+          }
+        </li>
+        @for (option of options; track option.id) {
+          <li class="min-w-0">
+            @if (option.id === 'credentials') {
+              <a [routerLink]="credentialsPath" class="create-choice-card">
+                <div class="create-choice-card__icon" aria-hidden="true">
+                  <span [class]="getIconColorClass(option.id)">
+                    <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="create-choice-card__body">
+                  <div class="create-choice-card__title-row">
+                    <span class="create-choice-card__count">{{ hubCount(option.id) }}</span>
+                    <span class="create-choice-card__title">{{ option.label }}</span>
+                  </div>
+                  <p class="create-choice-card__desc">{{ option.description }}</p>
+                </div>
+              </a>
+            } @else if (option.id === 'file' && !vaultFilesPaidCapability()) {
+              <a
+                routerLink="/subscription"
+                [queryParams]="{ from: 'files' }"
+                class="create-choice-card create-choice-card--upgrade"
+              >
+                <div class="create-choice-card__icon" aria-hidden="true">
+                  <span [class]="getIconColorClass(option.id)">
+                    <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="create-choice-card__body">
+                  <div class="create-choice-card__title-row">
+                    <span class="create-choice-card__count">{{ hubCount(option.id) }}</span>
+                    <span class="create-choice-card__title">{{ option.label }}</span>
+                    <span class="create-choice-card__badge create-choice-card__badge--upgrade">Paid plans</span>
+                  </div>
+                  <p class="create-choice-card__desc">
+                    Free plan: no encrypted file vaults. Paid plans: title, notes, and encrypted attachments in the vault list.
+                  </p>
+                  <p class="create-choice-card__upgrade-cta">View plans &#8594;</p>
+                </div>
+              </a>
+            } @else if (isSimpleVaultFormOption(option.id)) {
+              <a [routerLink]="simpleVaultFormPath(option.id)" class="create-choice-card">
+                <div class="create-choice-card__icon" aria-hidden="true">
+                  <span [class]="getIconColorClass(option.id)">
+                    @switch (option.id) {
+                      @case ('key') {
+                        <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                          />
+                        </svg>
+                      }
+                      @case ('password') {
+                        <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      }
+                      @case ('id') {
+                        <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                          />
+                        </svg>
+                      }
+                      @case ('secure-note') {
+                        <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
+                        </svg>
+                      }
+                      @case ('file') {
+                        <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      }
+                    }
+                  </span>
+                </div>
+                <div class="create-choice-card__body">
+                  <div class="create-choice-card__title-row">
+                    <span class="create-choice-card__count">{{ hubCount(option.id) }}</span>
+                    <span class="create-choice-card__title">{{ option.label }}</span>
+                  </div>
+                  <p class="create-choice-card__desc">{{ option.description }}</p>
+                </div>
+              </a>
+            } @else {
+              <button type="button" class="create-choice-card create-choice-card--soon" disabled>
+                <div class="create-choice-card__icon" aria-hidden="true">
+                  <span [class]="getIconColorClass(option.id)">
+                    <svg class="size-7 sm:size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="create-choice-card__body">
+                  <div class="create-choice-card__title-row">
+                    <span class="create-choice-card__count">{{ hubCount(option.id) }}</span>
+                    <span class="create-choice-card__title">{{ option.label }}</span>
+                    <span class="create-choice-card__badge create-choice-card__badge--soon">Coming soon</span>
+                  </div>
+                  <p class="create-choice-card__desc">{{ option.description }}</p>
+                </div>
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+
+    <aside class="settings-aside" aria-label="How create works">
+      <div class="settings-help-panel">
+        <h2 class="settings-help-heading">Security</h2>
+        <div class="settings-help-hero">
+          <div class="settings-help-hero-icon" aria-hidden="true">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+              />
+            </svg>
+          </div>
+          <div class="settings-help-hero-text">
+            <p class="settings-help-hero-title">Client-side first</p>
+            <p class="settings-help-hero-sub">
+              Your vault must be unlocked in this tab. Plaintext is encrypted before upload; the service stores ciphertext and
+              metadata only.
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-help-callout">
+          <span class="settings-help-callout-icon" aria-hidden="true">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </span>
+          <div>
+            <p class="settings-help-callout-title">Categories = clarity</p>
+            <p class="settings-help-callout-body">
+              Picking a type helps you search and rotate secrets later. It does not weaken encryption, every item gets its own
+              data key inside the vault envelope.
+            </p>
+          </div>
+        </div>
+
+        <p class="settings-help-section-label">Checklist</p>
+        <div class="settings-help-tips">
+          <div class="settings-help-tip">
+            <span class="settings-help-tip-icon" aria-hidden="true">
+              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+            <p class="settings-help-tip-body"><strong>Unlock first.</strong> Open the vault from the sidebar if items fail to save.</p>
+          </div>
+          <div class="settings-help-tip">
+            <span class="settings-help-tip-icon" aria-hidden="true">
+              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </span>
+            <p class="settings-help-tip-body">
+              <strong>Many types are live.</strong> Credentials, IDs, passwords, keys, secure notes, and encrypted file uploads
+              each use the same vault encryption envelope.
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,2884 @@
+/**
+ * Global layout and reusable UI patterns (not per-component stylesheets).
+ * Design tokens live in theme.css (@theme). Templates should prefer classes here over long Tailwind strings.
+ * Control height / padding / font: `--control-*` tokens in theme.css (shared by `.control-field`, `.control-btn-*`, `.auth-input`, `.btn-*`).
+ *
+ * Sections: custom elements → app shell → pages → surfaces → app control primitives → settings page →
+ *            shared forms → toast → auth (includes `.auth-verified-message` / `.auth-verified-shield` for verified success; `.auth-oauth-*` optional OAuth on login/signup; `.auth-link-icon` + updated `.auth-links a` / `.auth-legal-footer a` chips aligned with `.control-btn-secondary` tokens).
+ *
+ * **App shell forms:** use `.control-field` or Settings `.control-split` + `.control-split-label` + `.control-split-input`,
+ * `.control-input-shell` + `.control-input-shell-input` + `.control-input-shell-actions` (input with trailing icon buttons),
+ * `.control-choice-btn` (preset/toggle chips, same height as buttons),
+ * `.control-btn-primary`, `.control-btn-secondary`, `.control-btn-icon` (square icon-only; same `--control-height`), `.control-btn-recovery-emphasis` (accent-tinted: Settings → Recovery **Rotate Artifact** / **Unlock Vault**), `.control-form-grid`,
+ * `.control-actions-row` (right-aligned), `.control-actions-row-split` + `.control-actions-row-split-trailing` (left + right groups),
+ * `.control-actions-group` (cluster similar actions), `select.control-split-input` / `select.control-field` (brand-accent chevron),
+ * `.vault-argon2-onboarding-*` for onboarding Argon2 copy + hint,
+ * `.create-import-paste`, `.create-choice-card__count` (existing-item counts on `/new` and `/new/credentials`), `.create-choice-card--upgrade` + `.create-choice-card__badge--upgrade` (paid-only create-hub tiles: import / files), `.subscription-page-panel`, `.subscription-plan-meta`, `.subscription-plan-actions`, `.subscription-invoice-*`, `.subscription-lifetime-policy*` (Lifetime policy + purchase/refund dates on `/subscription`), `.pricing-tier-heading-rule` / `.pricing-tier-list--fill` / `.pricing-tier-coming-soon*` (Pricing `/pricing` tier cards, Lifetime “coming soon” strip, subscription list fill; tier grid uses subgrid at `lg` for row sync), `.import-vault-page-*`, `.import-vault-preview-list` / `.import-vault-preview-card`, `.import-vault-map-*` + `.import-vault-map-dup-warn` (step 3 mapping + duplicate-target warning; step 4 all-or-nothing import issue pager), `.import-vault-result-*` (step 2 review + step 4 results: three-column field tables on `/new/import`), `.vault-searchable-words-panel` (plaintext search hints on vault create forms), `.vault-item-display-id-badge` (+ `--list` for sidebar list id ink on `/vault/items`), `.vault-item-detail-*` (decrypted fields; `--split` / `--with-kicker` + `.vault-item-detail-heading-kicker`; `.vault-item-detail-row-main--copyable`; `.vault-item-detail-actions`; `.vault-item-detail-weak-pw`), `.vault-file-attach-heading` + `.vault-file-attach-add-btn` + `.vault-file-attach-body` (file vault: FILES row + compact Add files + list body), `.app-vault-encrypted-items-grid` (vault list fills workspace height to the bottom; detail follows), `.settings-tab-panel--vault-workspace` + `.vault-encrypted-items-scroll` (themed scrollbar: **left** item list and **right** detail/edit when content exceeds the pane), `.vault-empty-state*` (centered empty vault plane on `/vault/items`), and optional `.control-tab` / `.control-tab--active`.
+ * **Vault session status pip:** `.app-shell-vault-status-stack`, `.app-shell-vault-status-pip`, `.app-shell-vault-status-pip--locked`, `.app-shell-vault-status-pip-slot` (left rail: `size-6` slot matching other rail SVGs), `.app-shell-nav-link--vault-unlocked-status`, `.app-shell-idle-lock-countdown`, `__time`, `__label` (text idle countdown under green pip when unlocked).
+ * **Vault Session idle presets:** `.vault-session-heading-block`, `.vault-session-primary-actions` (Lock / Unlock CTA row), `.vault-session-idle-auto-lock-block` (Idle auto-lock presets only; timer lives on left rail).
+ * **Settings → Recovery:** `.settings-recovery-flow-intro`, `.settings-recovery-unlock-hint`; `.control-actions-row-split` keeps **Load Artifact** leading left; help rail `.settings-help-steps` (numbered how-to).
+ * **Shared modal shell:** `AppShellModalComponent` (`.vault-unlock-overlay` … `.vault-unlock-modal-inner`); `.vault-unlock-modal-lock.vault-unlock-modal-lock--static` for notices.
+ * **Full-page blocking overlay:** `BlockingOverlayComponent` (`.app-blocking-overlay` … `.app-blocking-overlay__icon-spin` + `animate-spin` in template) — viewport cover, blocks clicks, optional body scroll lock (import, vault unlock Argon2, long jobs).
+ * **Inline spinner:** `UiSpinnerComponent` (`app-ui-spinner`) — accent/muted/current border ring for buttons and cards; prefer over ad-hoc `animate-spin` spans.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Custom elements (viewport / routed shell)                                   */
+/* -------------------------------------------------------------------------- */
+
+app-root {
+  @apply block min-h-dvh;
+}
+
+app-master-layout {
+  @apply block h-[100dvh] max-h-[100dvh] min-h-0 w-full overflow-hidden;
+}
+
+/** Settings / Vault workspace: host is layout-transparent so `.settings-page-fill` is the flex child of `.app-main-scroll`. */
+app-settings,
+app-vault-items,
+app-vault-session-page {
+  display: contents;
+}
+
+/**
+ * Themed scrollbars: Firefox via @utility scroll-themed in index.css (@apply below).
+ * WebKit thumb/track (cannot live in @utility).
+ */
+.app-main-scroll::-webkit-scrollbar,
+.settings-tab-panel::-webkit-scrollbar,
+.settings-help-panel::-webkit-scrollbar,
+.settings-artifact-pre::-webkit-scrollbar,
+.vault-encrypted-items-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.app-main-scroll::-webkit-scrollbar-track,
+.settings-tab-panel::-webkit-scrollbar-track,
+.settings-help-panel::-webkit-scrollbar-track,
+.settings-artifact-pre::-webkit-scrollbar-track,
+.vault-encrypted-items-scroll::-webkit-scrollbar-track {
+  background: var(--color-app-bg);
+  border-radius: 9999px;
+}
+
+.app-main-scroll::-webkit-scrollbar-thumb,
+.settings-tab-panel::-webkit-scrollbar-thumb,
+.settings-help-panel::-webkit-scrollbar-thumb,
+.settings-artifact-pre::-webkit-scrollbar-thumb,
+.vault-encrypted-items-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-app-border);
+  border-radius: 9999px;
+  border: 2px solid var(--color-app-bg);
+}
+
+.app-main-scroll::-webkit-scrollbar-thumb:hover,
+.settings-tab-panel::-webkit-scrollbar-thumb:hover,
+.settings-help-panel::-webkit-scrollbar-thumb:hover,
+.settings-artifact-pre::-webkit-scrollbar-thumb:hover,
+.vault-encrypted-items-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-app-focus);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Authenticated app shell (master layout)                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * No `overflow-hidden` on the shell: keep rails usable for focus rings / small affordances;
+ * main column still clips via `.app-main` / `.app-main-scroll`.
+ */
+.app-shell {
+  @apply flex h-full min-h-0 w-full flex-row bg-app-bg text-app-text;
+}
+
+.app-rail {
+  @apply flex w-16 shrink-0 flex-col items-center bg-app-surface py-4;
+}
+
+.app-rail--start {
+  @apply border-r border-app-border;
+}
+
+.app-rail--end {
+  @apply border-l border-app-border;
+}
+
+.app-rail-nav-stack {
+  @apply flex flex-1 flex-col items-center gap-1;
+}
+
+.app-main {
+  @apply flex min-h-0 min-w-0 w-full flex-1 flex-col items-stretch justify-start overflow-hidden;
+}
+
+.app-main-scroll {
+  @apply scroll-themed flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain;
+}
+
+.app-shell-brand-mark {
+  @apply text-app-add text-2xl font-bold;
+}
+
+.app-shell-brand-mark-dot {
+  @apply text-white font-bold;
+}
+
+.app-shell-brand-link {
+  @apply inline-flex rounded-lg transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+.app-shell-nav-link {
+  @apply flex items-center justify-center rounded-lg p-3 transition focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+.app-shell-nav-link--muted {
+  @apply text-app-text-muted hover:bg-app-surface-hover hover:text-app-text-inverse;
+}
+
+/** Create: brand accent glyph; hover cell matches `.app-shell-nav-link--muted` (no opacity-only hover). */
+.app-shell-nav-link--add {
+  @apply text-app-add hover:bg-app-surface-hover;
+}
+
+/** Logout: keep visually quiet (light gray) like other secondary rail icons, not alarm red */
+.app-shell-nav-link--logout {
+  @apply text-app-text-muted hover:bg-app-surface-hover hover:text-app-text-inverse;
+}
+
+/** Vault unlocked: tap to lock; pip matches Vault → Session tab (`.app-shell-vault-status-pip`). */
+.app-shell-nav-link--vault-unlocked-status {
+  @apply text-app-text-muted hover:bg-app-surface-hover hover:text-app-text-inverse;
+}
+
+/** Left rail: same 1.5rem content box as `.size-6` nav icons so padding/hover cell aligns. */
+.app-shell-vault-status-pip-slot {
+  @apply flex size-6 shrink-0 items-center justify-center;
+}
+
+.app-shell-vault-status-pip {
+  @apply inline-flex size-2.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-500/40 ring-offset-2 ring-offset-app-surface;
+}
+
+.app-shell-vault-status-pip--locked {
+  @apply inline-flex size-2.5 shrink-0 rounded-full bg-app-text-muted ring-2 ring-app-border ring-offset-2 ring-offset-app-surface;
+}
+
+/** Green pip lock control + text idle countdown, stacked in the left rail. */
+.app-shell-vault-status-stack {
+  @apply flex flex-col items-center gap-1;
+}
+
+/** Text-only time until idle auto-lock (`app-shell-idle-lock-countdown`). */
+.app-shell-idle-lock-countdown {
+  @apply flex max-w-[4.5rem] flex-col items-center gap-0.5 text-center leading-none;
+}
+
+.app-shell-idle-lock-countdown__time {
+  @apply font-sans text-[0.7rem] font-semibold tabular-nums tracking-tight text-app-text/95;
+}
+
+.app-shell-idle-lock-countdown__label {
+  @apply text-[0.5rem] font-medium uppercase tracking-[0.14em] text-app-text-muted;
+}
+
+/** Current route (left rail): matches `routerLinkActive` on shell links. */
+.app-shell-nav-link--active {
+  @apply bg-app-surface-hover text-app-main-accent;
+}
+
+.app-shell-nav-link--active:hover {
+  @apply bg-app-surface-hover text-app-main-accent;
+}
+
+.app-shell-nav-link--active.app-shell-nav-link--add {
+  @apply bg-app-main-accent/15 text-app-add;
+}
+
+.app-shell-nav-link--active.app-shell-nav-link--add:hover {
+  @apply bg-app-main-accent/20 text-app-add opacity-100;
+}
+
+.app-shell-nav-link--active.app-shell-nav-link--logout {
+  @apply bg-app-surface-hover text-app-text-muted;
+}
+
+.app-shell-nav-link--active.app-shell-nav-link--logout:hover {
+  @apply bg-app-surface-hover text-app-text-inverse;
+}
+
+.app-shell-icon-btn {
+  @apply flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2.5 text-app-text-muted transition hover:bg-app-surface-hover hover:text-app-text-inverse focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+.app-shell-icon-btn--active {
+  @apply bg-app-surface-hover text-app-main-accent;
+}
+
+.app-shell-icon-btn--active:hover {
+  @apply bg-app-surface-hover text-app-main-accent;
+}
+
+/** Right-rail logout: intentionally destructive-looking (red icon + red-tinted cell). */
+.app-shell-icon-btn--logout {
+  @apply border border-app-main-accent/40 bg-app-main-accent/12 text-app-main-accent hover:bg-app-main-accent/20 hover:text-white;
+}
+
+.app-shell-icon-btn--active.app-shell-icon-btn--logout {
+  @apply border-app-main-accent bg-app-main-accent/35 text-white;
+}
+
+.app-shell-icon-btn--active.app-shell-icon-btn--logout:hover {
+  @apply border-app-main-accent bg-app-main-accent/45 text-white;
+}
+
+/* -------------------------------------------------------------------------- */
+/* In-app pages (dashboard, create flows, etc.)                              */
+/* -------------------------------------------------------------------------- */
+
+.page-content {
+  @apply flex min-w-0 w-full max-w-none flex-col items-stretch justify-start;
+}
+
+.page-pad {
+  @apply px-8 pt-12 pb-12;
+}
+
+.page-pad--settings {
+  @apply px-6 pt-6 pb-12 lg:px-8;
+}
+
+/** Vault → Items: `.page-pad--settings` bottom padding leaves a gap under the two-pane workspace; flush to the shell. */
+.page-pad--settings.page-pad--settings-vault-flush-bottom {
+  @apply pb-0;
+}
+
+.page-title--hero {
+  @apply mb-12 text-3xl font-semibold tracking-tight text-app-text;
+}
+
+.page-title--section {
+  @apply mb-3 text-3xl font-semibold tracking-tight text-app-text;
+}
+
+.page-title--form {
+  @apply mb-10 text-3xl font-semibold tracking-tight text-app-text;
+}
+
+.page-lede {
+  @apply mb-8 text-lg leading-relaxed text-app-text-muted;
+}
+
+/**
+ * Create (+) flow: choice cards with title + description, aligned with shell pages.
+ */
+.create-flow-intro {
+  @apply mb-6 w-full max-w-none text-sm leading-relaxed text-app-text-muted/90 sm:text-[0.9375rem];
+}
+
+.create-flow-intro strong {
+  @apply font-semibold text-app-text-muted;
+}
+
+.create-flow-intro em {
+  @apply not-italic font-medium text-app-text-muted;
+}
+
+.create-flow-back-row {
+  @apply mb-6 flex shrink-0 items-center;
+}
+
+/** `/new/import`: monospace paste box (~20 rows via `rows` in template; scroll-themed when needed). */
+.create-import-paste {
+  @apply box-border w-full resize-y rounded-xl border border-app-border bg-app-bg px-4 py-3 font-mono text-sm leading-relaxed text-app-text shadow-inner;
+  @apply transition placeholder:text-app-text-muted focus:border-app-focus focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+/** `/new/import` page: tighter bottom pad; main column stacks toolbar + intro + paste. */
+.import-vault-page-root {
+  @apply !pb-4 lg:!pb-5;
+}
+
+.import-vault-page-root .settings-layout {
+  @apply min-h-0 flex-1;
+}
+
+.import-vault-page-main {
+  @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+}
+
+.import-vault-toolbar {
+  @apply flex shrink-0 flex-wrap items-center justify-between gap-3 gap-y-2;
+}
+
+.import-vault-toolbar-actions {
+  @apply flex flex-wrap items-center justify-end gap-2;
+}
+
+.import-vault-paste-shell {
+  @apply min-w-0 shrink-0;
+}
+
+.import-vault-preview-list {
+  @apply scroll-themed max-h-[min(55dvh,32rem)] space-y-3 overflow-y-auto pr-1;
+}
+
+.import-vault-preview-card {
+  @apply rounded-xl border border-app-border bg-app-elevated/30 px-4 py-3 shadow-sm;
+}
+
+/** Step-2 import review uses `.import-vault-result-table*` (same three-column table as step 4 results). */
+
+/** Step 3 import: grouped per-key → vault field mapping (scroll inside card on small viewports). */
+.import-vault-map-step {
+  @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden;
+}
+
+.import-vault-map-list {
+  @apply min-h-0 min-w-0 flex-1;
+}
+
+.import-vault-map-card {
+  @apply rounded-xl border border-app-border bg-app-elevated/30 p-4 shadow-sm sm:p-5;
+}
+
+.import-vault-map-card-head {
+  @apply mb-4 flex flex-wrap items-start justify-between gap-3;
+}
+
+.import-vault-map-card-title {
+  @apply text-base font-semibold text-app-text;
+}
+
+.import-vault-map-card-sub {
+  @apply mt-1 text-xs text-app-text-muted;
+}
+
+.import-vault-map-table-wrap {
+  @apply scroll-themed max-h-[min(50dvh,22rem)] overflow-y-auto rounded-lg border border-app-border/60 bg-app-bg/40;
+}
+
+.import-vault-map-table {
+  @apply w-full min-w-[20rem] border-collapse text-left text-sm;
+}
+
+.import-vault-map-table thead th {
+  @apply sticky top-0 z-[1] border-b border-app-border bg-app-elevated/95 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.import-vault-map-table tbody td {
+  @apply border-b border-app-border/40 px-3 py-2 align-middle last:border-b-0;
+}
+
+.import-vault-map-src {
+  @apply max-w-[min(100%,14rem)] truncate text-app-text sm:max-w-none sm:whitespace-normal;
+}
+
+.import-vault-map-arrow-col {
+  @apply w-8 px-0;
+}
+
+.import-vault-map-arrow {
+  @apply w-8 text-xs;
+}
+
+.import-vault-map-select {
+  @apply max-w-none;
+}
+
+.import-vault-map-dup-warn {
+  @apply mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-3 text-sm text-app-text sm:px-4;
+}
+
+.import-vault-map-dup-warn-title {
+  @apply m-0 font-semibold text-amber-200;
+}
+
+.import-vault-map-dup-warn-body {
+  @apply mt-2 text-xs leading-relaxed text-app-text-muted sm:text-sm;
+}
+
+.import-vault-map-dup-warn-list {
+  @apply mt-2 list-disc space-y-1 pl-5 text-xs text-app-text-muted sm:text-sm;
+}
+
+/** Step 4 import: per-item outcome badges + three-column field table. */
+.import-vault-result-badge {
+  @apply rounded border px-1.5 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide;
+}
+
+.import-vault-result-badge--ok {
+  @apply border-emerald-500/50 text-emerald-300;
+}
+
+.import-vault-result-badge--pending {
+  @apply border-amber-500/50 text-amber-200;
+}
+
+.import-vault-result-badge--err {
+  @apply border-red-500/50 text-red-300;
+}
+
+.import-vault-result-badge--skip {
+  @apply border-app-border/80 text-app-text-muted;
+}
+
+.import-vault-result-table-wrap {
+  @apply rounded-lg border border-app-border/60 bg-app-bg/40;
+}
+
+.import-vault-result-table {
+  @apply w-full min-w-[18rem] border-collapse text-left text-sm;
+}
+
+.import-vault-result-table thead th {
+  @apply border-b border-app-border bg-app-elevated/90 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.import-vault-result-table tbody td {
+  @apply border-b border-app-border/40 px-3 py-2 align-top last:border-b-0;
+}
+
+.import-vault-result-td-key {
+  @apply max-w-[10rem] break-all text-app-text-muted sm:max-w-[12rem];
+}
+
+.import-vault-result-td-val {
+  @apply max-w-[min(100%,24rem)] break-words text-app-text;
+}
+
+.import-vault-result-td-map {
+  @apply max-w-[12rem] break-words;
+}
+
+/** Create (+) choosers: 1 col narrow, 2 per row from `sm` up; put import in `li.create-choice-grid__import` for a full-width row. */
+.create-choice-grid {
+  @apply grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2;
+}
+
+.create-choice-grid > li {
+  @apply flex min-h-0 min-w-0;
+}
+
+/** Full-width row for “Import vault items”; the six type tiles stay in the 2-col grid below. */
+.create-choice-grid > li.create-choice-grid__import {
+  @apply sm:col-span-2;
+}
+
+.create-choice-card {
+  @apply flex h-full min-h-[6.25rem] w-full min-w-0 flex-1 gap-4 rounded-xl border border-app-border bg-app-elevated/25 p-5 text-left shadow-sm transition sm:gap-5 sm:p-6;
+  @apply hover:border-app-main-accent/30 hover:bg-app-elevated/45 hover:shadow-md;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg;
+}
+
+a.create-choice-card {
+  @apply cursor-pointer;
+}
+
+button.create-choice-card {
+  @apply cursor-pointer;
+}
+
+.create-choice-card--soon {
+  @apply cursor-not-allowed opacity-[0.72] hover:border-app-border hover:bg-app-elevated/25 hover:shadow-sm;
+}
+
+/** Import entry: full-width row above the type tiles; dashed accent border + light wash. */
+.create-choice-card.create-choice-card--import {
+  @apply border border-dashed border-app-border bg-app-elevated/35 shadow-none;
+}
+
+.create-choice-card.create-choice-card--import:hover {
+  @apply border-app-border/90 bg-app-elevated/55 shadow-md;
+}
+
+.create-choice-card.create-choice-card--import:not(:hover) .create-choice-card__icon {
+  @apply border-app-border/80 bg-app-bg/80;
+}
+
+.create-choice-card.create-choice-card--import:hover .create-choice-card__icon {
+  @apply border-app-border/90 bg-app-bg;
+}
+
+/** Paid-only hub tiles: same interactive card as import, links to Subscription. */
+.create-choice-card.create-choice-card--upgrade {
+  @apply border border-dashed border-app-border bg-app-elevated/35 shadow-none;
+}
+
+.create-choice-card.create-choice-card--upgrade:hover {
+  @apply border-app-border/90 bg-app-elevated/55 shadow-md;
+}
+
+.create-choice-card.create-choice-card--upgrade:not(:hover) .create-choice-card__icon {
+  @apply border-app-border/80 bg-app-bg/80;
+}
+
+.create-choice-card.create-choice-card--upgrade:hover .create-choice-card__icon {
+  @apply border-app-border/90 bg-app-bg;
+}
+
+.create-choice-card__badge--upgrade {
+  @apply ml-2 border-app-main-accent/70 bg-app-main-accent/[0.24] px-2.5 py-1 text-[0.75rem] font-bold tracking-widest text-app-main-accent;
+}
+
+.create-choice-card__upgrade-cta {
+  @apply mt-3 inline-flex w-max items-center gap-1 rounded-md border border-app-border/80 bg-app-bg/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-app-text-muted;
+}
+
+.create-choice-card:not(.create-choice-card--soon):hover .create-choice-card__icon span {
+  @apply opacity-90;
+}
+
+.create-choice-card__icon {
+  @apply flex size-12 shrink-0 items-center justify-center rounded-xl border border-app-border/70 bg-app-bg/70 transition-colors sm:size-14;
+}
+
+.create-choice-card:not(.create-choice-card--soon):hover .create-choice-card__icon {
+  @apply border-app-main-accent/25 bg-app-main-accent/[0.06];
+}
+
+.create-choice-card__body {
+  @apply flex min-h-0 min-w-0 flex-1 flex-col justify-start;
+}
+
+.create-choice-card__title-row {
+  @apply flex w-full min-w-0 items-start justify-between gap-3;
+}
+
+/** Leading count of vault items already stored for this type (create hub + credential subtype pickers). */
+.create-choice-card__count {
+  @apply min-w-[1.75rem] shrink-0 pt-0.5 text-right font-mono text-base font-semibold tabular-nums text-app-text-muted sm:text-lg;
+}
+
+.create-choice-card__title {
+  @apply min-w-0 flex-1 text-lg font-semibold tracking-tight text-app-text sm:text-xl;
+}
+
+.create-choice-card__badge {
+  @apply shrink-0 rounded-md border border-app-border/80 bg-app-bg/80 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-app-text-muted;
+}
+
+.create-choice-card__badge--soon {
+  @apply ml-2 text-right;
+}
+
+.create-choice-card__desc {
+  @apply mt-2 min-w-0 text-sm leading-relaxed text-app-text-muted sm:text-[0.9375rem];
+}
+
+.page-back-row {
+  @apply mb-10 flex justify-center;
+}
+
+.link-back {
+  @apply text-app-text-muted transition hover:text-app-text;
+}
+
+.page-choice-grid {
+  @apply grid w-full grid-cols-1 gap-5 sm:grid-cols-2;
+}
+
+.dashboard-card-grid {
+  @apply grid grid-cols-1 gap-4 md:grid-cols-3;
+}
+
+/** Dashboard / Docs: metric tiles with icon + label + value + detail (1 / 2 / 4 columns by breakpoint). */
+.dashboard-stat-grid {
+  @apply grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4;
+}
+
+/** Dashboard right rail: vertical shortcut stack inside `.settings-aside` */
+.dashboard-help-shortcuts {
+  @apply flex flex-col gap-0.5;
+}
+
+/**
+ * Grid: row 1 = icon (optional) + label/value; row 2 = `.dashboard-stat-detail` (stretches with `minmax(0,1fr)` so cards in a row share height);
+ * optional row 3 = `.dashboard-stat-codeblock` (item mix).
+ * Icon-less cards (e.g. Docs reference tiles) use a single column via :not(:has(.dashboard-stat-icon)).
+ */
+.dashboard-stat-card {
+  @apply grid h-full min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto] gap-x-4 gap-y-3 rounded-xl border border-app-border bg-app-elevated/35 p-4 text-left shadow-sm transition hover:border-app-border hover:bg-app-elevated/55 sm:p-5;
+}
+
+.dashboard-stat-card:not(:has(.dashboard-stat-icon)) {
+  @apply grid-cols-1;
+}
+
+.dashboard-stat-card--live {
+  @apply border-app-main-accent/25 bg-app-main-accent/[0.07];
+}
+
+.dashboard-stat-icon {
+  @apply flex size-11 shrink-0 self-start items-center justify-center rounded-xl bg-app-main-accent/12 text-app-main-accent sm:size-12;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/** Vault locked state on dashboard live tile (muted vs accent open lock) */
+.dashboard-stat-icon--vault-locked {
+  @apply bg-app-elevated/60 text-app-text-muted;
+}
+
+.dashboard-stat-body {
+  @apply min-w-0 self-start;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dashboard-stat-card:not(:has(.dashboard-stat-icon)) .dashboard-stat-body {
+  grid-column: 1;
+}
+
+.dashboard-stat-label {
+  @apply text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-app-text-muted sm:text-[0.75rem];
+}
+
+.dashboard-stat-value {
+  @apply mt-1 max-w-full min-w-0 font-mono text-lg font-semibold tracking-tight text-app-text [overflow-wrap:anywhere] sm:text-xl;
+}
+
+.dashboard-stat-detail {
+  @apply col-span-full flex min-h-[5.25rem] w-full min-w-0 flex-col self-stretch text-sm leading-relaxed text-app-text-muted [overflow-wrap:anywhere] sm:min-h-[5.75rem] sm:text-base;
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+/** Stats / dashboard: extra line under detail (times, tune, UA tail). */
+.dashboard-stat-detail-append {
+  @apply mt-2 block text-sm leading-snug [overflow-wrap:anywhere] sm:text-base;
+}
+
+/** Stats / dashboard: long UA / monospace tails — cap height so one card does not stretch the whole row. */
+.dashboard-stat-detail-append--clamp {
+  @apply line-clamp-2 break-all;
+}
+
+/** Stats / dashboard: monospace histogram (item_type counts). */
+.dashboard-stat-codeblock {
+  @apply scroll-themed col-span-full mt-2 max-h-28 min-h-[6.5rem] min-w-0 overflow-y-auto rounded-lg border border-app-border/60 bg-app-bg/70 px-2 py-2 font-mono text-sm leading-snug text-app-text-muted;
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+.docs-prose {
+  @apply max-w-none text-sm leading-relaxed text-app-text-muted sm:text-base;
+}
+
+.docs-prose h3 {
+  @apply mb-2 mt-6 text-base font-semibold text-app-text first:mt-0;
+}
+
+.docs-prose p {
+  @apply mb-3;
+}
+
+.docs-prose ul {
+  @apply mb-4 list-inside list-disc space-y-1.5;
+}
+
+.docs-prose code {
+  @apply rounded bg-app-bg px-1.5 py-0.5 font-mono text-xs text-app-text sm:text-sm;
+}
+
+.docs-route-table {
+  @apply w-full border-collapse overflow-hidden rounded-xl border border-app-border text-left text-sm;
+}
+
+.docs-route-table th {
+  @apply border-b border-app-border bg-app-elevated/50 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.docs-route-table td {
+  @apply border-b border-app-border/80 px-3 py-2.5 font-mono text-xs text-app-text sm:text-sm;
+}
+
+.docs-route-table tr:last-child td {
+  @apply border-b-0;
+}
+
+/** Docs: full-width page, horizontal shortcuts (matches shell, minimal chrome). */
+.docs-shell-nav {
+  @apply mb-10 flex flex-wrap items-center gap-x-1 gap-y-2 border-b border-app-border/70 pb-8;
+}
+
+.docs-shell-nav-link {
+  @apply rounded-lg px-3 py-2 text-sm font-medium text-app-text-muted transition hover:bg-app-surface-hover hover:text-app-text;
+}
+
+.docs-shell-nav-link.router-link-active {
+  @apply bg-app-main-accent/12 text-app-main-accent;
+}
+
+.docs-body {
+  @apply flex max-w-none flex-col gap-12 pt-2;
+}
+
+.docs-section {
+  @apply border-t border-app-border/60 pt-10 first:border-t-0 first:pt-0;
+}
+
+.docs-section--last {
+  @apply pb-4;
+}
+
+.docs-crypto-ref-list {
+  @apply mt-5 max-w-none list-none space-y-0 divide-y divide-app-border/50 p-0;
+}
+
+.docs-crypto-ref-list > li {
+  @apply flex flex-col gap-1 py-4 first:pt-0;
+}
+
+.docs-crypto-ref-label {
+  @apply text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-app-text-muted;
+}
+
+.docs-crypto-ref-value {
+  @apply font-mono text-sm font-semibold text-app-text;
+}
+
+.docs-crypto-ref-detail {
+  @apply text-xs leading-relaxed text-app-text-muted;
+}
+
+.docs-api-list {
+  @apply mt-4 list-none space-y-2.5 p-0 font-mono text-xs text-app-text sm:text-sm;
+}
+
+.docs-api-list li {
+  @apply leading-relaxed [overflow-wrap:anywhere];
+}
+
+.docs-api-list code {
+  @apply rounded bg-app-bg px-1.5 py-0.5 text-[0.8125rem] text-app-text sm:text-sm;
+}
+
+.docs-route-group {
+  @apply mt-8 first:mt-6;
+}
+
+.docs-route-group-title {
+  @apply text-base font-semibold text-app-text;
+}
+
+.docs-route-group-kicker {
+  @apply mt-1 text-sm text-app-text-muted;
+}
+
+.docs-route-group-links {
+  @apply mt-4 flex flex-wrap gap-x-1 gap-y-2;
+}
+
+/** Docs page: hero, TOC + main column, pillars, definition blocks */
+.docs-hero {
+  @apply relative mb-10 overflow-hidden rounded-2xl border border-app-main-accent/30 bg-gradient-to-br from-app-main-accent/[0.14] via-app-bg to-app-elevated/30 px-6 py-9 shadow-sm sm:px-10 sm:py-11;
+}
+
+.docs-hero-pattern {
+  @apply pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-app-main-accent/10 blur-3xl;
+}
+
+.docs-hero-inner {
+  @apply relative z-[1] max-w-4xl;
+}
+
+.docs-hero-kicker {
+  @apply mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-app-main-accent;
+}
+
+.docs-hero-title {
+  @apply text-3xl font-bold tracking-tight text-app-text sm:text-4xl;
+}
+
+.docs-hero-lede {
+  @apply mt-4 max-w-3xl text-base leading-relaxed text-app-text-muted sm:text-lg;
+}
+
+.docs-page-grid {
+  @apply lg:grid lg:grid-cols-12 lg:items-start lg:gap-10 xl:gap-12;
+}
+
+.docs-toc {
+  @apply mb-10 lg:sticky lg:top-4 lg:col-span-3 lg:mb-0 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto;
+}
+
+.docs-toc-inner {
+  @apply rounded-2xl border border-app-border/55 bg-app-elevated/20 p-4 shadow-sm;
+}
+
+.docs-toc-title {
+  @apply mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-app-text-muted;
+}
+
+.docs-toc-list {
+  @apply flex flex-col gap-0.5;
+}
+
+.docs-toc-link {
+  @apply block rounded-lg px-2.5 py-2 text-sm text-app-text-muted transition hover:bg-app-surface-hover hover:text-app-text;
+}
+
+.docs-main-column {
+  @apply min-w-0 lg:col-span-9;
+}
+
+.docs-pillar-grid {
+  @apply my-8 grid gap-4 sm:grid-cols-3;
+}
+
+.docs-pillar {
+  @apply flex flex-col gap-3 rounded-xl border border-app-border/50 bg-app-surface/50 p-5 shadow-sm;
+}
+
+.docs-pillar-icon {
+  @apply flex size-11 shrink-0 items-center justify-center rounded-xl bg-app-main-accent/12 text-app-main-accent;
+}
+
+.docs-pillar-title {
+  @apply text-sm font-semibold text-app-text;
+}
+
+.docs-pillar-text {
+  @apply text-xs leading-relaxed text-app-text-muted sm:text-sm;
+}
+
+.docs-callout {
+  @apply my-6 rounded-xl border-l-4 border-app-main-accent/60 bg-app-main-accent/[0.06] px-4 py-3 text-sm leading-relaxed text-app-text-muted;
+}
+
+.docs-def-block {
+  @apply mt-5 space-y-5;
+}
+
+.docs-def-row {
+  @apply border-l-2 border-app-border/80 pl-4;
+}
+
+.docs-def-term {
+  @apply text-sm font-semibold text-app-text;
+}
+
+.docs-def-desc {
+  @apply mt-1.5 text-sm leading-relaxed text-app-text-muted;
+}
+
+.docs-section-title {
+  @apply mb-2 scroll-mt-24 text-xl font-semibold tracking-tight text-app-text sm:text-2xl;
+}
+
+.docs-section-kicker {
+  @apply mb-5 max-w-3xl text-sm font-medium text-app-text-muted;
+}
+
+.docs-prose h3.docs-h3 {
+  @apply mb-2 mt-6 text-base font-semibold text-app-text;
+}
+
+.docs-step-list {
+  @apply mt-4 list-none space-y-3 p-0;
+}
+
+.docs-step-list li {
+  @apply flex gap-3 text-sm leading-relaxed text-app-text-muted;
+}
+
+.docs-step-num {
+  @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-app-main-accent/15 text-xs font-bold text-app-main-accent;
+}
+
+/** Right shell rail: stack search + shortcuts with even spacing (Alert, Pricing, Docs). */
+.app-rail-end-stack {
+  @apply flex w-full flex-1 flex-col items-center gap-1.5;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Pricing page                                                               */
+/* -------------------------------------------------------------------------- */
+
+.pricing-tier-grid {
+  @apply grid grid-cols-1 gap-x-6 gap-y-6 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0;
+}
+
+.pricing-tier-card {
+  @apply flex min-h-full flex-col rounded-2xl border border-app-border bg-app-elevated/20 p-6 shadow-sm sm:p-8;
+}
+
+/** Pricing page grid only: tighter top padding (badges removed); subscription reuse of `.pricing-tier-card` unchanged. */
+.pricing-tier-grid > .pricing-tier-card {
+  @apply px-6 pb-6 pt-4 sm:px-8 sm:pb-8 sm:pt-5;
+}
+
+/**
+ * At `lg`, three tier cards share one row track set so flair + heading + price + list rows stay aligned
+ * (flex spacer could not when list / actions heights differed).
+ */
+@media (min-width: 1024px) {
+  .pricing-tier-grid {
+    grid-template-rows: auto auto auto auto auto 1fr auto;
+  }
+
+  .pricing-tier-grid > .pricing-tier-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: subgrid;
+    grid-row: 1 / span 7;
+    min-height: 0;
+  }
+
+  .pricing-tier-grid > .pricing-tier-card:nth-child(1) {
+    grid-column: 1;
+  }
+
+  .pricing-tier-grid > .pricing-tier-card:nth-child(2) {
+    grid-column: 2;
+  }
+
+  .pricing-tier-grid > .pricing-tier-card:nth-child(3) {
+    grid-column: 3;
+  }
+}
+
+/** Free + Pro only (Lifetime tier hidden); replaces three-column `lg` layout with two equal columns. */
+.pricing-tier-grid.pricing-tier-grid--two-tiers {
+  @apply lg:grid-cols-2;
+}
+
+.pricing-tier-card--featured {
+  @apply relative border-app-main-accent/45 bg-app-main-accent/[0.07] shadow-md ring-1 ring-app-main-accent/20;
+}
+
+.pricing-tier-badge {
+  @apply mb-3 inline-flex w-fit rounded-full border border-app-border/80 bg-app-bg/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.pricing-tier-badge--accent {
+  @apply border-app-main-accent/50 bg-app-main-accent/15 text-app-main-accent;
+}
+
+/** Plan pitch: icon + short playful copy above the tier name (no outer frame). */
+.pricing-tier-flair {
+  @apply mb-0 flex items-start gap-3;
+}
+
+/** Full-bleed separator above plan name row (matches card horizontal padding). */
+.pricing-tier-heading-rule {
+  @apply -mx-6 mb-4 shrink-0 border-t border-app-border/80 sm:-mx-8;
+}
+
+.pricing-tier-flair-icon {
+  @apply mt-0.5 flex size-9 shrink-0 items-center justify-center text-app-main-accent;
+}
+
+.pricing-tier-flair-icon svg {
+  @apply size-6;
+}
+
+.pricing-tier-flair-copy {
+  @apply text-sm leading-relaxed text-app-text;
+}
+
+.pricing-tier-name {
+  @apply text-xl font-semibold tracking-tight text-app-text;
+}
+
+/** Lifetime tier: title + info control that opens pay-once policy modal (`AppShellModalComponent`). */
+.pricing-tier-name-row {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.pricing-lifetime-policy-trigger {
+  @apply inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-app-border/80 bg-app-bg/40 text-app-text-muted transition hover:border-app-main-accent/50 hover:bg-app-main-accent/10 hover:text-app-main-accent;
+}
+
+.pricing-lifetime-policy-trigger svg {
+  @apply size-[1.125rem];
+}
+
+.pricing-tier-price {
+  @apply mt-4 flex flex-wrap items-baseline gap-1 font-mono text-3xl font-bold tracking-tight text-app-text sm:text-4xl;
+}
+
+.pricing-tier-period {
+  @apply text-base font-normal text-app-text-muted;
+}
+
+.pricing-tier-blurb {
+  @apply mt-2 text-sm leading-relaxed text-app-text-muted;
+}
+
+.pricing-tier-list {
+  @apply mt-6 flex flex-col gap-2.5 text-sm text-app-text-muted;
+}
+
+/** Use on subscription summary feature list so actions sit at the card bottom when the card stretches. */
+.pricing-tier-list--fill {
+  @apply flex-1;
+}
+
+.pricing-tier-list li {
+  @apply flex gap-2.5 leading-snug;
+}
+
+.pricing-tier-list svg {
+  @apply mt-0.5 size-4 shrink-0 text-app-main-accent;
+}
+
+.pricing-tier-list li.pricing-tier-list-item--muted {
+  @apply text-app-text-muted;
+}
+
+.pricing-tier-list li.pricing-tier-list-item--muted svg {
+  @apply text-app-text-muted;
+}
+
+/** Pricing: migration / bulk import callout (Pro & Lifetime). */
+.pricing-import-spotlight {
+  @apply relative overflow-hidden rounded-2xl border border-app-border bg-app-elevated/35 p-6 shadow-md ring-1 ring-app-border/60 sm:p-8;
+}
+
+.pricing-import-spotlight::before {
+  @apply pointer-events-none absolute inset-y-0 left-0 w-1/2 max-w-md bg-gradient-to-r from-app-main-accent/14 to-transparent content-[''];
+}
+
+.pricing-import-spotlight-inner {
+  @apply relative flex flex-col gap-5 md:flex-row md:items-center md:gap-8;
+}
+
+.pricing-import-spotlight-icon-wrap {
+  @apply flex size-14 shrink-0 items-center justify-center rounded-2xl bg-app-main-accent/14 text-app-main-accent ring-1 ring-app-main-accent/30 md:size-16;
+}
+
+.pricing-import-spotlight-icon-wrap svg {
+  @apply size-8;
+}
+
+.pricing-import-spotlight-pill {
+  @apply mb-2 inline-flex rounded-full border border-app-main-accent/45 bg-app-main-accent/12 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-app-main-accent;
+}
+
+.pricing-import-spotlight-title {
+  @apply text-lg font-semibold tracking-tight text-app-text sm:text-xl;
+}
+
+.pricing-import-spotlight-lede {
+  @apply mt-2 max-w-2xl text-sm leading-relaxed text-app-text-muted sm:text-base;
+}
+
+.pricing-import-spotlight-actions {
+  @apply mt-5 flex flex-wrap items-center gap-3 md:mt-0 md:ml-auto md:flex-col md:items-stretch;
+}
+
+.pricing-tier-actions {
+  @apply mt-8 flex flex-col gap-3;
+}
+
+.pricing-tier-actions-loading {
+  @apply box-border flex w-full items-center justify-center rounded-xl border border-app-border/80 bg-app-elevated/20 text-app-text-muted;
+  min-height: var(--control-height);
+}
+
+/** Current tier on Pricing: same footprint as `.btn-*`, bordered shell, not interactive. */
+.pricing-tier-plan-status {
+  @apply box-border flex w-full cursor-default items-center justify-center gap-2 rounded-xl border border-app-border/80 bg-app-elevated/35 text-center font-medium text-app-text shadow-sm;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/**
+ * Lifetime tier: pay-once not available yet (replaces CTA). Icon + two-line copy; accent-tinted shell aligned with
+ * `.pricing-tier-plan-status` / `.btn-*` height on the pricing grid.
+ */
+.pricing-tier-coming-soon {
+  @apply m-0 box-border flex w-full items-center gap-3 overflow-hidden rounded-xl border border-app-main-accent/30 bg-gradient-to-br from-app-main-accent/12 via-app-elevated/30 to-app-bg/50 shadow-sm ring-1 ring-inset ring-app-main-accent/10;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+}
+
+.pricing-tier-coming-soon-icon {
+  @apply flex size-10 shrink-0 items-center justify-center rounded-lg bg-app-main-accent/18 text-app-main-accent;
+}
+
+.pricing-tier-coming-soon-copy {
+  @apply min-w-0 flex-1 text-left;
+}
+
+.pricing-tier-coming-soon-title {
+  @apply block text-sm font-semibold tracking-tight text-app-text;
+}
+
+.pricing-tier-coming-soon-sub {
+  @apply mt-0.5 block text-xs leading-snug text-app-text-muted;
+}
+
+.pricing-tier-plan-status-icon {
+  @apply size-5 shrink-0 text-app-main-accent;
+}
+
+.pricing-security-grid {
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+}
+
+.pricing-security-item {
+  @apply flex gap-3 rounded-xl border border-app-border/80 bg-app-bg/40 p-4;
+}
+
+.pricing-security-item-icon {
+  @apply flex size-10 shrink-0 items-center justify-center rounded-lg bg-app-main-accent/12 text-app-main-accent;
+}
+
+/** Platform admin: `/admin/customers` directory table */
+.app-shell-rail-foot {
+  @apply shrink-0;
+}
+
+.admin-customers-table-wrap {
+  @apply overflow-x-auto;
+}
+
+.admin-customers-table {
+  @apply w-full min-w-[52rem] border-collapse text-left text-sm;
+}
+
+.admin-customers-table thead th {
+  @apply sticky top-0 z-[1] border-b border-app-border bg-app-elevated/80 px-3 py-3 text-xs font-semibold uppercase tracking-wide text-app-text-muted backdrop-blur-sm sm:px-4;
+}
+
+.admin-customers-table thead th.admin-customers-th-actions,
+.admin-customers-table tbody td.admin-customers-td-actions {
+  @apply w-28 text-center sm:w-32;
+}
+
+.admin-customers-table tbody td {
+  @apply border-b border-app-border/60 px-3 py-2.5 align-middle text-app-text sm:px-4;
+}
+
+.admin-customers-table tbody tr:last-child td {
+  @apply border-b-0;
+}
+
+.admin-customers-plan {
+  @apply inline-flex rounded-full border border-app-border/80 px-2.5 py-0.5 text-xs font-semibold text-app-text-muted;
+}
+
+.admin-customers-plan--pro {
+  @apply border-app-main-accent/45 bg-app-main-accent/10 text-app-main-accent;
+}
+
+.admin-customers-plan--lifetime {
+  @apply border-app-border bg-app-bg/50 text-app-text;
+}
+
+.surface-link-card {
+  @apply rounded-xl border border-app-border bg-app-surface p-6 transition hover:bg-app-surface-hover;
+}
+
+.surface-link-card-title {
+  @apply mb-2 text-lg font-semibold;
+}
+
+.surface-link-card-text {
+  @apply text-sm text-app-text-muted;
+}
+
+.surface-pill-link {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-border bg-app-surface px-6 py-3 text-app-text shadow-md transition hover:bg-app-surface-hover hover:shadow-lg;
+}
+
+/* -------------------------------------------------------------------------- */
+/* App control primitives (in-app forms, any shell page can reuse)           */
+/* Sizing: theme.css `--control-*` tokens; inputs and buttons share height.  */
+/* -------------------------------------------------------------------------- */
+
+.control-field {
+  @apply w-full rounded-xl border border-app-border bg-app-bg leading-normal text-app-text placeholder-app-text-muted transition focus:border-app-focus focus:outline-none focus:ring-1 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/**
+ * Split field: light label column (left) + input or `<select>` (right), one bordered unit. Settings forms.
+ * Markup: `.control-split` > `label.control-split-label[for]` + `input.control-split-input` or `select.control-split-input`
+ */
+.control-split {
+  @apply flex w-full overflow-hidden rounded-xl border border-app-border bg-app-bg shadow-sm;
+  min-height: var(--control-height);
+}
+
+.control-split-label {
+  @apply flex min-w-[9.5rem] max-w-[42%] shrink-0 cursor-default flex-col justify-center border-r border-app-border bg-app-elevated text-sm font-medium leading-snug text-app-text sm:min-w-[11rem] sm:max-w-[15rem];
+  padding-inline: 0.75rem;
+  padding-block: var(--control-padding-block);
+}
+
+@media (min-width: 640px) {
+  .control-split-label {
+    padding-inline: 1rem;
+  }
+}
+
+.control-split-input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-app-text outline-none transition placeholder:text-app-text-muted focus:ring-1 focus:ring-inset focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.control-split-input[type='number'] {
+  @apply pr-9;
+}
+
+textarea.control-split-input {
+  @apply min-h-[7.5rem] resize-y;
+}
+
+/**
+ * Input with trailing icon actions (show/hide, copy). Onboarding unlock secret and similar.
+ * Markup: `.control-input-shell` > `input.control-input-shell-input` + `.control-input-shell-actions` > `.control-input-shell-action-btn`
+ */
+.control-input-shell {
+  @apply flex w-full overflow-hidden rounded-xl border border-app-border bg-app-bg shadow-sm;
+  min-height: var(--control-height);
+}
+
+.control-input-shell-input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-app-text outline-none transition placeholder:text-app-text-muted focus:ring-2 focus:ring-inset focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.control-input-shell-actions {
+  @apply flex shrink-0 divide-x divide-app-border border-l border-app-border;
+}
+
+.control-input-shell-action-btn {
+  @apply flex w-11 items-center justify-center text-app-text-muted transition hover:bg-app-elevated-hover hover:text-app-text focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-app-focus;
+}
+
+/** Toggle / preset chips (auto-lock minutes, similar segmented choices). Same height as `.control-btn-*`. */
+.control-choice-btn {
+  @apply rounded-xl border px-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-app-focus focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg;
+  min-height: var(--control-height);
+  min-width: 3.25rem;
+}
+
+/**
+ * Native `<select>`: hide OS menu arrow and draw a brand-red chevron (stroke matches `theme.css` `--color-app-accent` #c73e3e).
+ */
+select.control-split-input,
+select.control-field {
+  @apply cursor-pointer appearance-none pr-10;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='%23c73e3e' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 1.125rem 1.125rem;
+}
+
+.control-form-grid {
+  @apply grid w-full grid-cols-1 gap-4;
+}
+
+/** Share-field modal result: label above, readonly value + Copy in one bordered row. */
+.share-create-result-field {
+  @apply flex w-full flex-col gap-1.5;
+}
+
+.share-create-result-label {
+  @apply text-sm font-medium text-app-text;
+}
+
+.share-create-result-row {
+  @apply flex w-full items-stretch overflow-hidden rounded-xl border border-app-border bg-app-bg shadow-sm;
+  min-height: var(--control-height);
+}
+
+.share-create-result-input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-app-text outline-none;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.share-create-result-input--mono {
+  @apply font-mono text-sm;
+}
+
+.share-create-result-copy {
+  @apply shrink-0 rounded-none border-0 border-l border-app-border shadow-none hover:shadow-none;
+  min-height: var(--control-height);
+  padding-inline: 1rem;
+}
+
+/** Plaintext server metadata (not in the encrypted blob); vault create/edit forms. */
+.vault-searchable-words-panel {
+  @apply rounded-xl border border-app-border/90 bg-app-elevated/25 p-4;
+}
+
+.vault-searchable-words-panel-header {
+  @apply flex flex-wrap items-baseline justify-between gap-2;
+}
+
+.vault-searchable-words-panel-title {
+  @apply text-sm font-semibold tracking-tight text-app-text;
+}
+
+.vault-searchable-words-panel-badge {
+  @apply shrink-0 rounded-md border border-app-border bg-app-bg px-2 py-0.5 text-xs font-medium text-app-text-muted;
+}
+
+.vault-searchable-words-panel-hint {
+  @apply mt-2 text-sm leading-relaxed text-app-text-muted;
+}
+
+.vault-searchable-words-panel-field {
+  @apply mt-3;
+}
+
+/** Onboarding Argon2id (`app-vault-argon2-controls`): intro line (info icon + text) + `.vault-argon2-onboarding-section` cards. */
+.vault-argon2-onboarding-hint-wrap {
+  @apply mb-2;
+}
+
+.vault-argon2-onboarding-hint-with-icon {
+  @apply flex items-start gap-2.5 text-sm leading-relaxed text-app-text sm:text-base;
+}
+
+.vault-argon2-onboarding-hint-icon {
+  @apply flex w-4 shrink-0 items-center justify-center text-app-text-muted sm:w-[1.125rem];
+  height: 1lh;
+}
+
+.vault-argon2-onboarding-hint-icon svg {
+  @apply size-[0.95rem] sm:size-4;
+}
+
+.vault-argon2-onboarding-hint {
+  @apply m-0 min-w-0 flex-1 text-left font-normal text-inherit;
+}
+
+/** One tunable block: blurb + control(s), visually separate from the next. */
+.vault-argon2-onboarding-section {
+  @apply flex min-w-0 flex-col gap-2.5 rounded-xl border border-app-border/70 bg-app-bg/50 px-3 py-3 sm:px-4 sm:py-3.5;
+}
+
+.vault-argon2-onboarding-section .vault-argon2-onboarding-kv {
+  @apply mb-0;
+}
+
+.vault-argon2-onboarding-section .vault-argon2-onboarding-memory-row {
+  @apply mb-0;
+}
+
+.vault-argon2-onboarding-kv {
+  @apply mb-2 flex min-w-0 max-w-full items-baseline gap-x-1.5;
+}
+
+.vault-argon2-onboarding-kv-label {
+  @apply shrink-0 text-sm font-semibold uppercase tracking-wide text-app-text sm:text-base;
+}
+
+.vault-argon2-onboarding-kv-dot {
+  @apply shrink-0 text-xs text-app-text-muted sm:text-sm;
+}
+
+.vault-argon2-onboarding-kv-detail {
+  @apply min-w-0 flex-1 truncate text-left text-[0.7rem] font-normal text-app-text-muted sm:text-xs;
+}
+
+.vault-argon2-onboarding-memory-row {
+  @apply mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1;
+}
+
+.vault-argon2-onboarding-memory-row .vault-argon2-onboarding-kv {
+  @apply mb-0 min-w-0 flex-1 basis-full sm:basis-0;
+}
+
+.vault-argon2-onboarding-memory-value {
+  @apply shrink-0 text-sm font-semibold tabular-nums text-app-text;
+}
+
+/**
+ * Form footer: actions aligned to the right. For a leading secondary (e.g. “Set defaults”) with trailing Back + primary,
+ * use `.control-actions-row-split` on the row and wrap the trailing buttons in `.control-actions-row-split-trailing`.
+ * `.control-actions-group` is a segmented button group (Tailwind pattern: `-space-x-px` so adjacent borders overlap).
+ * Put only `button.control-btn-*` as direct children inside a group.
+ */
+.control-actions-row {
+  @apply flex w-full flex-wrap items-center justify-end gap-x-6 gap-y-3;
+}
+
+.control-actions-row-split {
+  @apply flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-3;
+}
+
+.control-actions-row-split-trailing {
+  @apply flex min-w-0 flex-wrap items-center justify-end gap-x-6 gap-y-3;
+}
+
+.control-actions-group {
+  @apply inline-flex -space-x-px items-stretch rounded-xl shadow-md;
+}
+
+.control-actions-group
+  > :is(.control-btn-primary, .control-btn-secondary, .control-btn-recovery-emphasis) {
+  @apply relative z-0 rounded-none shadow-none hover:shadow-none first:rounded-l-xl last:rounded-r-xl focus:z-10 focus-visible:z-10;
+}
+
+/** Match `.control-field` height; brand red (same as login `.auth-cta`). Prefer leading `<svg>` + `<span>`. Add `w-max` when shrink-wrap. */
+.control-btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-main-accent bg-app-main-accent font-semibold text-white shadow-lg transition hover:opacity-95 hover:shadow-xl focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.control-btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-border/80 bg-app-elevated font-medium text-app-text shadow-md transition hover:border-app-border hover:bg-app-elevated-hover hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/**
+ * Recovery tab: high-visibility actions that mutate backup or unlock (same height as other control buttons; brand accent surface).
+ */
+.control-btn-recovery-emphasis {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-main-accent/55 bg-app-main-accent/14 font-semibold text-app-add shadow-md transition hover:border-app-main-accent hover:bg-app-main-accent/22 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/** Destructive action (delete, etc.). Pair with `min-h-0 px-4 py-2 text-sm` in toolbars to align with compact secondaries. */
+.control-btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-red-600/85 bg-app-bg font-medium text-red-500 shadow-md transition hover:border-red-500 hover:bg-red-500/10 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-red-500/35;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/** Square icon-only control (cancel, overflow menu). Same `--control-height` as `.control-btn-primary` / `.control-btn-secondary`. */
+.control-btn-icon {
+  @apply inline-flex shrink-0 items-center justify-center rounded-xl border border-app-border/80 bg-app-elevated text-app-text-muted shadow-md transition hover:border-app-border hover:bg-app-elevated-hover hover:text-app-text focus:outline-none focus:ring-1 focus:ring-app-focus;
+  box-sizing: border-box;
+  width: var(--control-height);
+  min-width: var(--control-height);
+  height: var(--control-height);
+  min-height: var(--control-height);
+  padding: 0;
+}
+
+/** Segmented / settings-style tabs; combine with `.control-tab--active`. */
+.control-tab {
+  @apply inline-flex items-center gap-2 rounded-t-lg border border-transparent bg-transparent text-sm font-medium text-app-text-muted transition;
+  min-height: var(--control-height);
+  padding-inline: 1rem;
+  padding-block: var(--control-padding-block);
+  @apply hover:border-app-border hover:bg-app-surface-hover hover:text-app-text;
+  @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-app-focus focus-visible:ring-offset-0;
+}
+
+@media (min-width: 640px) {
+  .control-tab {
+    padding-inline: 1.25rem;
+  }
+}
+
+.control-tab--active {
+  @apply relative z-10 -mb-px border border-transparent border-b-2 border-b-app-add bg-app-surface font-semibold text-app-text;
+}
+
+.control-tab--active:hover {
+  @apply border-transparent border-b-app-add bg-app-surface text-app-text;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings layout & tabs                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Fills the main column (flex child of .app-main-scroll). Requires `app-settings` / `app-vault-items` { display: contents; }.
+ */
+.settings-page-fill {
+  @apply flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden;
+}
+
+.settings-layout {
+  @apply flex min-h-0 w-full flex-1 flex-col gap-8 overflow-hidden lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:items-stretch lg:gap-10;
+}
+
+.settings-main {
+  @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-2 lg:col-span-9;
+}
+
+/**
+ * In-app pages that should align with Settings (same main column width, no right help rail).
+ * Markup: `.app-page-layout` > `.app-page-main` > header + body.
+ */
+.app-page-layout {
+  @apply flex min-h-0 w-full flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:items-stretch lg:gap-10;
+}
+
+.app-page-main {
+  @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-2 lg:col-span-9;
+}
+
+/** Use under `.app-page-layout` when the page should span all 12 columns (no empty rail column). */
+.app-page-main--full {
+  @apply w-full max-w-none lg:col-span-12;
+}
+
+.settings-page-header {
+  @apply mb-6 shrink-0;
+}
+
+.settings-page-heading {
+  @apply flex flex-wrap items-baseline gap-x-1.5 gap-y-0 leading-none;
+}
+
+.settings-page-kicker {
+  @apply text-sm font-medium text-app-text-muted/85;
+}
+
+.settings-page-heading-dot {
+  @apply text-sm text-app-text-muted/60;
+}
+
+.settings-page-title {
+  @apply text-2xl font-semibold tracking-tight text-app-text;
+}
+
+.settings-tabs {
+  @apply mb-6 flex shrink-0 flex-wrap items-end gap-1 border-b border-app-border;
+}
+
+/**
+ * Help rail (lg ~25%): no left rule or shadow; horizontal gap from main column is `.settings-layout` grid gap only.
+ * Help scrolls inside .settings-help-panel.
+ */
+.settings-aside {
+  @apply flex min-h-0 min-w-0 shrink-0 flex-col pt-2 lg:col-span-3 lg:h-full lg:min-h-0 lg:self-stretch;
+}
+
+.settings-help-panel {
+  @apply scroll-themed flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto text-sm text-app-text-muted;
+  @apply max-h-[min(50dvh,22rem)] py-0.5 pr-1 lg:max-h-none lg:h-full lg:min-h-0 lg:pr-0;
+}
+
+.settings-help-heading {
+  @apply shrink-0 text-xs font-semibold uppercase leading-none tracking-wide text-app-text;
+}
+
+/** Top strip: icon + title + short intro (flat, no card chrome, no bottom rule). */
+.settings-help-hero {
+  @apply flex shrink-0 gap-3 border-0 pb-4;
+}
+
+.settings-help-hero-icon {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-lg text-app-main-accent;
+}
+
+.settings-help-hero-text {
+  @apply min-w-0 flex-1;
+}
+
+.settings-help-hero-title {
+  @apply text-sm font-semibold leading-tight text-app-text;
+}
+
+.settings-help-hero-sub {
+  @apply mt-1 text-xs leading-relaxed text-app-text-muted;
+}
+
+/** Key takeaway: accent rail only (no filled box). */
+.settings-help-callout {
+  @apply flex gap-3 border-0 border-l-2 border-app-main-accent/45 py-0.5 pl-3 text-xs leading-relaxed text-app-text;
+}
+
+.settings-help-callout-icon {
+  @apply mt-0.5 shrink-0 text-app-main-accent;
+}
+
+.settings-help-callout-title {
+  @apply font-semibold text-app-text;
+}
+
+.settings-help-callout-body {
+  @apply mt-0.5 text-app-text-muted;
+}
+
+/** Tips: divided list, no per-row boxes */
+.settings-help-tips {
+  @apply flex flex-col divide-y divide-app-border/45;
+}
+
+.settings-help-tip {
+  @apply flex gap-3 bg-transparent py-3 first:pt-0 last:pb-0;
+}
+
+.settings-help-tip-icon {
+  @apply mt-0.5 shrink-0 text-app-text-muted;
+}
+
+.settings-help-tip-body {
+  @apply min-w-0 flex-1 text-xs leading-relaxed text-app-text-muted;
+}
+
+.settings-help-tip-body strong {
+  @apply font-medium text-app-text;
+}
+
+/** Small label row (e.g. “At a glance”) */
+.settings-help-section-label {
+  @apply mb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.settings-help-highlights {
+  @apply flex flex-col gap-2;
+}
+
+.settings-help-highlight {
+  @apply flex items-start gap-2 text-[0.7rem] leading-snug text-app-text-muted;
+}
+
+.settings-help-highlight-icon {
+  @apply shrink-0 text-app-main-accent;
+}
+
+.settings-help-section-title {
+  @apply mb-3 font-medium text-app-text;
+}
+
+.settings-help-list {
+  @apply list-inside list-disc space-y-2 leading-relaxed;
+}
+
+/** Settings help: simple numbered steps (e.g. Recovery). */
+.settings-help-steps {
+  @apply mt-2 list-decimal list-outside space-y-3 pl-5 text-sm leading-relaxed text-app-text-muted;
+}
+
+.settings-help-steps strong {
+  @apply font-medium text-app-text;
+}
+
+/** Help rail shortcuts: text-first links (no bordered cards). */
+.settings-help-nav-links {
+  @apply flex flex-col gap-0.5;
+}
+
+.settings-help-nav-link {
+  @apply flex flex-col gap-0.5 rounded-lg px-2 py-2 text-left transition hover:bg-app-surface-hover;
+}
+
+.settings-help-nav-link-title {
+  @apply text-sm font-semibold text-app-text;
+}
+
+.settings-help-nav-link-text {
+  @apply text-xs leading-relaxed text-app-text-muted;
+}
+
+.settings-section-card {
+  @apply w-full rounded-xl border border-app-border/55 bg-app-surface/70 p-6 shadow-none;
+}
+
+.settings-section-follow {
+  @apply mt-8;
+}
+
+.settings-section-title {
+  @apply mb-2 text-xl font-semibold;
+}
+
+.settings-section-subtitle {
+  @apply mb-2 text-lg font-semibold;
+}
+
+/** `/subscription`: pricing-tier cards + compact invoice list (mirrors Pricing page) */
+.subscription-page-panel {
+  @apply flex max-w-3xl flex-col gap-6;
+}
+
+.subscription-plan-meta {
+  @apply space-y-1 border-t border-app-border/60 pt-4;
+}
+
+.subscription-plan-actions {
+  @apply flex-col sm:flex-row sm:flex-wrap sm:items-center;
+}
+
+.subscription-invoice-list {
+  @apply mt-2 flex flex-col gap-3;
+}
+
+.subscription-invoice-row {
+  @apply rounded-xl border border-app-border/70 bg-app-bg/40 p-4;
+}
+
+.subscription-invoice-row-top {
+  @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;
+}
+
+.subscription-invoice-date {
+  @apply m-0 font-semibold text-app-text;
+}
+
+.subscription-invoice-period {
+  @apply m-0 mt-0.5 text-xs text-app-text-muted;
+}
+
+.subscription-invoice-amount {
+  @apply m-0 font-mono text-lg font-semibold tabular-nums text-app-text;
+}
+
+.subscription-invoice-status {
+  @apply m-0 mt-0.5 text-xs text-app-text-muted;
+}
+
+.subscription-invoice-links {
+  @apply mt-3 flex flex-wrap gap-4 border-t border-app-border/50 pt-3 text-sm;
+}
+
+.subscription-lifetime-policy {
+  @apply mt-6 rounded-xl border border-app-border/70 bg-app-elevated/25 p-5 sm:p-6;
+}
+
+.subscription-lifetime-policy--compact {
+  @apply mt-6 p-4 sm:p-5;
+}
+
+.subscription-lifetime-policy-title {
+  @apply mb-2 text-base font-semibold tracking-tight text-app-text;
+}
+
+.subscription-lifetime-policy-body {
+  @apply text-sm leading-relaxed text-app-text-muted sm:text-[0.9375rem];
+}
+
+.subscription-lifetime-policy-meta {
+  @apply mt-2 text-sm leading-relaxed text-app-text-muted;
+}
+
+.settings-artifact-pre {
+  @apply scroll-themed max-h-[min(40dvh,24rem)] overflow-auto rounded-lg border border-app-border bg-app-bg p-3 text-sm;
+}
+
+/**
+ * Vault → Items page: full-width search row (`.vault-encrypted-items-search-shell` — no outer card; input + toggles only), then the two-pane grid.
+ * Search toggles: `.vault-search-filter-toggle-group` (segmented Off/On; clipped `rounded-lg`; active “On” uses light brand accent surface).
+ */
+.vault-encrypted-items-page {
+  @apply flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden lg:gap-4;
+}
+
+/**
+ * Vault → Items: **4 + 8** column row; list and detail each use the same card chrome (`rounded-xl border … bg-app-surface shadow-sm`).
+ * List uses `.vault-encrypted-items-list` (one tile per row). Sits under full-width `.vault-encrypted-items-search-shell`.
+ *
+ * Row tracks: solo (empty vault) = one `1fr` row. With detail pane, desktop = one `1fr` row (both columns stretch);
+ * below `lg`, list + detail stack with two `1fr` rows so each pane gets half the grid height (scroll inside each card).
+ */
+.app-vault-encrypted-items-grid {
+  @apply grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 overflow-hidden;
+  @apply lg:grid-cols-12 lg:gap-6;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-vault-encrypted-items-grid--split {
+  @apply max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)];
+}
+
+.app-vault-encrypted-items-grid > * {
+  @apply h-full min-h-0 min-w-0;
+}
+
+/** Vault item detail pane: header row (meta + Edit / overflow / Update actions). */
+.vault-detail-toolbar {
+  @apply flex flex-wrap items-start justify-between gap-3 border-b border-app-border/80 pb-4;
+}
+
+.vault-detail-toolbar-meta {
+  @apply flex min-w-0 flex-1 items-start gap-3;
+}
+
+.vault-detail-toolbar-actions {
+  @apply flex shrink-0 flex-wrap items-center justify-end gap-2;
+}
+
+/** Toolbar actions share one fixed control height (Edit, Update, icon cancel / overflow). */
+.vault-detail-toolbar-actions :is(.control-btn-primary, .control-btn-secondary, .control-btn-icon) {
+  box-sizing: border-box;
+  height: var(--control-height);
+  min-height: var(--control-height);
+}
+
+.vault-detail-actions-menu {
+  @apply relative;
+}
+
+.vault-detail-actions-menu-panel {
+  @apply absolute right-0 top-[calc(100%+0.375rem)] z-20 min-w-[10.5rem] overflow-hidden rounded-xl border border-app-border bg-app-surface py-1 shadow-lg;
+}
+
+.vault-detail-actions-menu-item {
+  @apply flex w-full items-center px-3 py-2.5 text-left text-sm font-medium text-app-text transition hover:bg-app-elevated/70 focus:outline-none focus-visible:bg-app-elevated;
+}
+
+.vault-detail-actions-menu-item--danger {
+  @apply text-red-500 hover:bg-red-500/10 hover:text-red-600;
+}
+
+/** Per-user #N in vault list row and detail header (`VaultEncryptedItemsComponent`). */
+.vault-item-display-id-badge {
+  @apply shrink-0 rounded-md border border-app-border/90 bg-app-elevated px-2 py-0.5 text-xs font-semibold tabular-nums text-app-text-muted shadow-sm;
+}
+
+/** Sidebar list: no chip surface — muted ink, then softened so it sits below the title (buttons inherit primary text otherwise). */
+.vault-item-display-id-badge.vault-item-display-id-badge--list {
+  @apply rounded-none border-0 bg-transparent px-0 py-0 shadow-none text-xs font-medium tabular-nums;
+  color: var(--color-app-text-muted);
+  opacity: 0.68;
+}
+
+/** Vault item detail (decrypted / searchable preview): label/value rows + copy; `--split` = title + right; `--with-kicker` = one-line `TITLE.` kicker. */
+.vault-item-detail-body {
+  @apply rounded-xl border border-app-border/80 bg-app-bg/40 shadow-sm;
+}
+
+.vault-item-detail-heading {
+  @apply rounded-t-xl bg-app-elevated/45 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-app-text-muted;
+}
+
+/** Title left + muted note flush right (e.g. vault searchable words strip). */
+.vault-item-detail-heading.vault-item-detail-heading--split {
+  @apply flex flex-wrap items-center justify-between gap-x-3 gap-y-1;
+}
+
+/** Single strip: `TITLE.` kicker (same line; kicker is larger / sentence case). */
+.vault-item-detail-heading.vault-item-detail-heading--with-kicker {
+  @apply flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5;
+}
+
+.vault-item-detail-heading-kicker {
+  @apply text-sm font-medium normal-case tracking-normal text-app-text-muted/90;
+}
+
+/** File vault attachments: tighter heading bar so the Add files control aligns with FILES. */
+.vault-file-attach-heading {
+  @apply py-2;
+}
+
+/** Compact light-red Add files (tinted accent surface + white label/icon via `currentColor`). */
+.vault-file-attach-add-btn {
+  @apply inline-flex min-h-0 items-center justify-center gap-1.5 rounded-lg border border-app-main-accent/50 bg-app-main-accent/14 px-2.5 py-2 text-xs font-semibold leading-tight text-white shadow-sm transition hover:border-app-main-accent hover:bg-app-main-accent/22 hover:shadow-md focus:outline-none focus:ring-1 focus:ring-app-focus disabled:pointer-events-none disabled:opacity-50;
+}
+
+.vault-file-attach-body {
+  @apply flex flex-col gap-2 px-3 pb-3 pt-1.5 sm:px-4;
+}
+
+.vault-item-detail-row {
+  @apply flex min-h-[3.25rem] items-stretch gap-2 border-b border-app-border/55 px-3 py-2.5 last:border-b-0 sm:px-4;
+}
+
+/** Brief brand-red flash when a detail row copies (label+value click or copy icon). */
+@keyframes vault-detail-row-copy-flash {
+  0% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+  18% {
+    background-color: color-mix(in srgb, var(--color-app-accent) 18%, transparent);
+    box-shadow: inset 3px 0 0 0 var(--color-app-accent);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.vault-item-detail-row--copy-flash {
+  animation: vault-detail-row-copy-flash 0.55s ease-out;
+}
+
+.vault-item-detail-row-main {
+  @apply min-w-0 flex-1;
+}
+
+/** Label + value column: click or Enter/Space copies (same as copy icon); eye/actions stay separate. */
+.vault-item-detail-row-main--copyable {
+  @apply cursor-pointer rounded-lg transition-colors hover:bg-app-elevated/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-focus;
+}
+
+/** Text nodes otherwise show the I-beam over values; keep pointer on the whole hit area. */
+.vault-item-detail-row-main--copyable .vault-item-detail-key,
+.vault-item-detail-row-main--copyable .vault-item-detail-value {
+  @apply cursor-pointer;
+}
+
+/** Per-field reveal + copy buttons on vault item detail rows. */
+.vault-item-detail-actions {
+  @apply flex shrink-0 items-center gap-1 self-center;
+}
+
+.vault-item-detail-actions-separator {
+  @apply mx-0.5 h-6 w-px shrink-0 self-center bg-app-border/90;
+}
+
+.vault-item-detail-share {
+  @apply text-app-main-accent hover:border-app-main-accent/50 hover:bg-app-main-accent/10 hover:text-app-main-accent;
+}
+
+/** Weak-password pill (zxcvbn): icon + label before reveal/copy. */
+.vault-item-detail-weak-pw {
+  @apply mr-1 inline-flex shrink-0 items-center gap-1 self-center rounded-full border border-red-500/40 bg-red-500/[0.13] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-red-400 shadow-sm;
+}
+
+.vault-item-detail-weak-pw-icon {
+  @apply size-3 shrink-0 opacity-95;
+}
+
+.vault-item-detail-key {
+  @apply text-[0.7rem] font-semibold uppercase tracking-wide text-app-text-muted;
+}
+
+.vault-item-detail-value {
+  @apply mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-app-text;
+}
+
+.vault-item-detail-copy {
+  @apply inline-flex size-10 shrink-0 items-center justify-center self-center rounded-lg border border-app-border/80 bg-app-elevated/50 text-app-text-muted transition hover:border-app-border hover:bg-app-elevated-hover hover:text-app-text focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+/** Brief post-copy tick (brand red); child SVG uses `currentColor`. */
+.vault-item-detail-copy--copied {
+  @apply border-app-add bg-app-add/15 text-app-add shadow-sm;
+}
+
+/**
+ * Vault → Items: left pane list as a single-column tile stack (one item per row at all breakpoints).
+ * `items-start` keeps each tile only as tall as its content (no stretch filler under short rows).
+ * Pair `li` with `min-w-0`; item buttons use `.vault-encrypted-items-list-tile`.
+ */
+.vault-encrypted-items-list {
+  @apply m-0 grid list-none grid-cols-1 content-start items-start gap-1.5 p-0;
+}
+
+.vault-encrypted-items-list-tile {
+  @apply flex min-h-0 min-w-0 cursor-pointer flex-col gap-0.5;
+}
+
+.vault-encrypted-items-list-tile-primary {
+  @apply text-sm font-medium leading-snug text-app-text;
+}
+
+.vault-encrypted-items-list-tile-secondary {
+  @apply truncate text-xs text-app-text-muted;
+}
+
+/** Category bubble in vault list rows (`app-vault-item-category-icon`). */
+.vault-item-category-icon {
+  @apply size-10 rounded-xl;
+}
+
+.vault-item-category-icon svg {
+  @apply size-5 shrink-0;
+}
+
+.vault-item-category-icon.vault-item-category-icon--compact {
+  @apply size-8 rounded-lg;
+}
+
+.vault-item-category-icon.vault-item-category-icon--compact svg {
+  @apply size-4;
+}
+
+/**
+ * Vault → Items: empty index (no rows). Parent scroll pane should be `flex flex-col` so this fills height and centers.
+ */
+.vault-empty-state {
+  @apply flex flex-1 min-h-0 flex-col items-center justify-center px-3 py-8 sm:px-6 sm:py-12;
+}
+
+.vault-empty-state-panel {
+  @apply w-full max-w-lg rounded-2xl border border-app-border/90 bg-app-elevated/25 px-6 py-10 text-center shadow-md sm:px-10 sm:py-12;
+}
+
+.vault-empty-state-icon {
+  @apply mx-auto flex size-14 items-center justify-center rounded-2xl border border-app-border/80 bg-app-bg/80 text-app-text-muted shadow-inner;
+}
+
+.vault-empty-state-icon svg {
+  @apply size-8 shrink-0;
+}
+
+.vault-empty-state-kicker {
+  @apply font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-app-text-muted sm:text-xs;
+}
+
+.vault-empty-state-title {
+  @apply mt-4 text-xl font-semibold tracking-tight text-app-text sm:text-2xl;
+}
+
+.vault-empty-state-body {
+  @apply mt-3 text-sm leading-relaxed text-app-text-muted sm:text-base;
+}
+
+.vault-empty-state-meta {
+  @apply mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-t border-app-border/60 pt-6 font-mono text-[0.65rem] text-app-text-muted sm:text-xs;
+}
+
+.vault-empty-state-meta span {
+  @apply inline-flex items-center gap-1.5 rounded-md border border-app-border/70 bg-app-bg/50 px-2 py-1;
+}
+
+/** Full-width search row above list + detail (no surrounding card; search field supplies its own border). */
+.vault-encrypted-items-search-shell {
+  @apply w-full shrink-0;
+}
+
+/** Search input + right-aligned Off/On filter toggles (vault list). */
+.vault-encrypted-items-search-row {
+  @apply flex flex-wrap items-center gap-2 sm:gap-2.5;
+}
+
+.vault-encrypted-items-search-filters {
+  @apply flex shrink-0 flex-wrap items-center gap-2 sm:gap-3;
+}
+
+.vault-search-filter {
+  @apply flex items-center gap-2;
+}
+
+.vault-search-filter-label {
+  @apply text-[0.6875rem] font-normal uppercase tracking-wider text-app-text-muted/70;
+}
+
+/**
+ * Segmented Off / On for vault list search (`button.control-tab` × 2). Standalone from `.control-actions-group`
+ * so `-space-x-px` / `rounded-xl` do not fight this layout. `overflow-hidden` + one outer `rounded-lg` clips both
+ * segments so corner radii are equal; middle seam via `divide-x`.
+ */
+.vault-search-filter-toggle-group {
+  @apply inline-flex items-stretch divide-x divide-app-border/65 overflow-hidden rounded-lg border border-app-border bg-app-bg p-0 shadow-sm;
+}
+
+.vault-search-filter-toggle-group > button.control-tab {
+  @apply inline-flex min-h-[2.25rem] min-w-[3.25rem] shrink-0 items-center justify-center rounded-none border-0 px-4 py-1 text-base font-medium text-app-text-muted shadow-none;
+  @apply hover:bg-app-elevated/50 hover:text-app-text;
+}
+
+.vault-search-filter-toggle-group > button.control-tab:focus-visible {
+  @apply z-10 ring-1 ring-inset ring-app-focus ring-offset-0;
+}
+
+/** Reset settings-tab `.control-tab--active` bottom accent / negative margin inside vault toggles. */
+.vault-search-filter-toggle-group > button.control-tab.control-tab--active {
+  @apply relative z-[1] m-0 border-0 bg-app-main-accent/14 font-semibold text-app-add shadow-none;
+}
+
+/** Vault list search field: same control height as the rest of the app; slightly larger type for scanability. */
+.vault-items-search-input.control-field {
+  @apply rounded-lg leading-snug;
+  font-size: 1.0625rem;
+  /** Parent `.vault-encrypted-items-page` uses `overflow-hidden`; inset ring avoids clipped focus outline. */
+  @apply focus:border-app-focus focus:outline-none focus:ring-2 focus:ring-inset focus:ring-app-focus;
+}
+
+/** Vault list search: hide Chromium/WebKit default clear control (blue × on `type="search"`). */
+.vault-items-search-input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/** Scrolls only the active tab body; header + tabs stay fixed within Settings. */
+.settings-tab-panel {
+  @apply scroll-themed min-h-0 flex-1 overflow-x-hidden overflow-y-auto;
+}
+
+/**
+ * With `.settings-tab-panel` on Vault → Items: do not scroll the whole tab; `app-vault-encrypted-items` scrolls the **left list**
+ * and, when needed, the **right** detail/edit column (`.vault-encrypted-items-scroll` on both).
+ */
+.settings-tab-panel.settings-tab-panel--vault-workspace {
+  @apply overflow-y-hidden;
+}
+
+/**
+ * Tab / card intro: **Title.** *kicker* (same line; period in `.tab-panel-heading-dot`, same rhythm as `.settings-page-heading`).
+ * Use `<h2 class="tab-panel-heading">` with spans inside for a11y.
+ */
+.tab-panel-heading {
+  @apply mb-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-0 leading-none;
+}
+
+.tab-panel-heading-title {
+  @apply text-xl font-semibold tracking-tight text-app-text;
+}
+
+.tab-panel-heading-dot {
+  @apply text-sm text-app-text-muted/60;
+}
+
+.tab-panel-heading-kicker {
+  @apply text-sm font-medium text-app-text-muted/85;
+}
+
+.tab-panel-heading--compact {
+  @apply mb-2;
+}
+
+.tab-panel-heading--compact .tab-panel-heading-title {
+  @apply text-base font-semibold tracking-tight;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared form controls                                                        */
+/* -------------------------------------------------------------------------- */
+
+.form-input {
+  @apply w-full rounded-lg border border-app-border bg-app-surface text-app-text placeholder-app-text-muted transition focus:border-app-focus focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.form-textarea {
+  @apply min-h-[120px] resize-y;
+}
+
+.form-input-compact {
+  @apply w-full rounded-lg border border-app-border bg-app-bg text-app-text placeholder-app-text-muted focus:border-app-focus focus:outline-none focus:ring-1 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: 0.75rem;
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+.form-stack {
+  @apply flex w-full flex-col gap-6;
+}
+
+.form-field-stack {
+  @apply flex w-full flex-col gap-2;
+}
+
+.form-label {
+  @apply text-lg font-medium text-app-text;
+}
+
+.form-actions-end {
+  @apply mt-4 flex justify-end;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Toast notifications                                                         */
+/* -------------------------------------------------------------------------- */
+
+.toast-host {
+  @apply pointer-events-none fixed inset-x-0 top-5 z-[100] flex justify-center px-4;
+}
+
+/** Shell + layout; light red surfaces (brand tint for info/success, stronger red for errors). */
+.toast-panel {
+  @apply pointer-events-auto flex w-[min(92vw,28rem)] max-w-[min(92vw,28rem)] items-center gap-3 rounded-2xl border px-4 py-2 shadow-2xl backdrop-blur-md transition-opacity duration-200;
+  @apply text-app-text;
+}
+
+.toast-panel--info {
+  @apply border-app-main-accent/35 bg-app-main-accent/12 ring-1 ring-app-main-accent/20;
+}
+
+/** Non-error confirmations match info (no green). */
+.toast-panel--success {
+  @apply border-app-main-accent/35 bg-app-main-accent/12 ring-1 ring-app-main-accent/20;
+}
+
+.toast-panel--error {
+  @apply border-red-500/50 bg-red-500/18 ring-1 ring-red-500/25;
+}
+
+.toast-dismiss {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-lg text-app-main-accent transition hover:bg-app-main-accent/20 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+.toast-message {
+  @apply min-w-0 flex-1 text-base font-medium leading-normal text-app-text;
+}
+
+/**
+ * Primary action button (Save, Submit, links as CTA). Same brand red as login (`.auth-cta`). Prefer a leading `<svg>` + `<span>` label.
+ */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-main-accent bg-app-main-accent font-semibold text-white shadow-lg transition hover:opacity-95 hover:shadow-xl focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline-button);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/**
+ * Secondary / cancel-style actions (same palette as `.control-btn-secondary`, compact for dialogs and toolbars). Prefer a leading icon + `<span>` label.
+ */
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-app-border/80 bg-app-elevated font-medium text-app-text shadow-md transition hover:border-app-border hover:bg-app-elevated-hover hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Auth marketing / legal shells (class-based only; no per-route CSS files)    */
+/* Aligned with shell pages: settings-style headings, elevated surfaces, prose. */
+/* -------------------------------------------------------------------------- */
+
+.auth-shell {
+  @apply relative flex min-h-dvh flex-col bg-app-bg text-app-text;
+}
+
+/** Centers the auth card; padding kept here so legal footer stays viewport-aligned */
+.auth-shell-body {
+  @apply flex w-full flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-14;
+}
+
+/** Terms / Privacy outside the elevated auth card, viewport bottom-right */
+.auth-legal-footer {
+  @apply absolute bottom-4 right-4 z-10 flex flex-wrap items-center justify-end gap-2 sm:bottom-6 sm:right-6;
+}
+
+.auth-legal-footer a {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-app-border/80 bg-app-elevated font-medium text-app-text shadow-md backdrop-blur-sm transition hover:border-app-border hover:bg-app-elevated-hover hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: 0.875rem;
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+@media (min-width: 640px) {
+  .auth-legal-footer a {
+    padding-inline: 1rem;
+  }
+}
+
+/** Monochrome stroke icons inside `.auth-links a` and `.auth-legal-footer a` (matches OAuth row icon weight). */
+.auth-link-icon {
+  @apply size-5 shrink-0 text-app-text-muted;
+}
+
+/** Legal / long-form pages: top-aligned, scrollable */
+.auth-shell--legal {
+  @apply items-stretch justify-start py-8 sm:py-10;
+}
+
+.auth-card {
+  @apply w-full max-w-2xl rounded-2xl border border-app-border bg-app-surface p-10 shadow-xl;
+}
+
+.auth-split {
+  @apply relative grid w-full max-w-5xl overflow-hidden rounded-3xl border border-app-border/70 bg-app-surface md:grid-cols-2;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.8),
+    0 0 0 1px color-mix(in srgb, var(--color-app-main-accent) 20%, var(--color-app-border));
+}
+
+.auth-panel-left {
+  @apply relative flex min-h-[min(28rem,70dvh)] flex-col justify-between gap-7 border-app-border bg-gradient-to-br from-app-bg via-app-surface to-app-bg p-8 text-center sm:min-h-0 sm:p-10 md:p-12;
+}
+
+.auth-panel-right {
+  @apply relative flex flex-col justify-center border-app-border bg-app-elevated/20 p-8 sm:p-10 md:border-l md:border-t-0 md:p-12;
+}
+
+.auth-panel-left::before {
+  content: '';
+  @apply pointer-events-none absolute -left-16 -top-20 size-56 rounded-full;
+  background: color-mix(in srgb, var(--color-app-main-accent) 18%, transparent);
+  filter: blur(48px);
+}
+
+.auth-panel-right::before {
+  content: '';
+  @apply pointer-events-none absolute -bottom-16 -right-20 size-64 rounded-full;
+  background: color-mix(in srgb, var(--color-app-main-accent) 12%, transparent);
+  filter: blur(58px);
+}
+
+.auth-marketing-stack {
+  @apply flex flex-col items-center;
+}
+
+/** Centered column for forms on auth (right panel) */
+.auth-panel-content {
+  @apply mx-auto flex w-full max-w-md flex-col items-stretch text-center;
+}
+
+.auth-brand {
+  @apply inline-flex items-baseline text-center text-4xl font-bold leading-none tracking-tight text-app-text sm:text-5xl;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.auth-brand-b {
+  @apply text-app-main-accent;
+  font-weight: 700;
+}
+
+.auth-brand-rest {
+  @apply text-app-text;
+  font-weight: 700;
+}
+
+.auth-brand-dot {
+  @apply text-app-main-accent;
+  font-weight: 700;
+}
+
+.auth-title {
+  @apply mb-6 text-4xl font-bold tracking-tight text-app-text;
+}
+
+.auth-form-header {
+  @apply mb-8 w-full shrink-0 text-center;
+}
+
+.auth-form-header .settings-page-heading {
+  @apply justify-center;
+}
+
+.auth-info-title {
+  @apply text-4xl font-bold tracking-tight text-app-text;
+}
+
+.auth-info-text {
+  @apply mt-3 max-w-sm text-sm leading-relaxed text-app-text-muted sm:max-w-md sm:text-base;
+}
+
+/** Stacked brand + blurb (centered) */
+.auth-hero {
+  @apply flex flex-col items-center text-center;
+}
+
+.auth-form {
+  @apply grid w-full grid-cols-1 gap-5;
+}
+
+.auth-panel-content .auth-form {
+  @apply text-left;
+}
+
+.auth-panel-content .auth-message {
+  @apply text-center;
+}
+
+.auth-field-label {
+  @apply mb-1.5 block text-left text-xs font-semibold uppercase tracking-wider text-app-text-muted;
+}
+
+.auth-input {
+  @apply w-full rounded-xl border border-app-border bg-app-bg text-app-text placeholder-app-text-muted transition;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 10px 24px -20px rgba(0, 0, 0, 0.8);
+  @apply focus:border-app-focus focus:outline-none focus:ring-2 focus:ring-app-focus;
+}
+
+.auth-checkbox-row {
+  @apply flex w-full cursor-pointer items-start gap-3 rounded-xl border border-app-border/80 bg-app-bg/50 p-4 text-left text-sm leading-snug text-app-text-muted transition hover:border-app-border hover:bg-app-bg;
+}
+
+.auth-checkbox-row input[type='checkbox'] {
+  @apply mt-0.5 size-4 shrink-0 rounded border-app-border text-app-main-accent focus:ring-app-focus;
+}
+
+.auth-links {
+  @apply flex flex-wrap justify-center gap-2 gap-y-2 border-t border-app-border/50 pt-6;
+}
+
+/**
+ * Auth nav chips (Sign up, Login, Recovery, …): same chrome as `.auth-oauth-btn` / `.control-btn-secondary` (no accent red).
+ */
+.auth-links a {
+  @apply inline-flex max-w-full items-center justify-center gap-2 rounded-xl border border-app-border/80 bg-app-elevated font-medium text-app-text shadow-md transition hover:border-app-border hover:bg-app-elevated-hover hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: 0.875rem;
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+@media (min-width: 640px) {
+  .auth-links a {
+    padding-inline: 1rem;
+  }
+}
+
+.auth-side-label {
+  @apply mt-4 inline-flex max-w-sm items-center rounded-lg border border-app-main-accent/35 bg-app-main-accent/10 px-3 py-2 text-left text-xs font-medium text-app-text-muted;
+}
+
+.auth-feature-list {
+  @apply mt-4 w-full max-w-sm space-y-2 text-left;
+}
+
+.auth-feature-item {
+  @apply flex items-start gap-2 rounded-lg border border-app-border/70 bg-app-surface/55 px-3 py-2 text-xs text-app-text-muted;
+}
+
+/** Decorative list marker: check glyph (not a form checkbox). */
+.auth-feature-check {
+  @apply mt-0.5 inline-block size-[0.95rem] shrink-0 text-app-main-accent;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.2 6.5 11.2 12.5 4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.2 6.5 11.2 12.5 4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.auth-message {
+  @apply mt-5 text-center text-sm text-app-text-muted;
+}
+
+/** Login / signup: optional OAuth divider + provider icon row (see `AuthOAuthButtonsComponent`). */
+.auth-oauth-or {
+  @apply mt-6 flex items-center gap-3 text-center text-xs font-semibold uppercase tracking-wider text-app-text-muted;
+}
+
+.auth-oauth-or::before,
+.auth-oauth-or::after {
+  content: '';
+  @apply h-px flex-1 bg-app-border;
+}
+
+/**
+ * OAuth row: one line of equal-width controls using the same tokens as `.control-btn-secondary` (elevated fill, `app-border`, `shadow-md`; never `.auth-cta` red).
+ */
+.auth-oauth-stack {
+  @apply mt-4 flex w-full flex-row flex-nowrap items-stretch justify-center gap-2 sm:gap-3;
+}
+
+.auth-oauth-btn {
+  @apply inline-flex min-w-0 flex-1 basis-0 items-center justify-center gap-1.5 rounded-xl border border-app-border/80 bg-app-elevated font-medium text-app-text shadow-md transition hover:border-app-border hover:bg-app-elevated-hover hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-app-focus focus:ring-offset-2 focus:ring-offset-app-bg;
+  min-height: var(--control-height);
+  padding-inline: 0.5rem;
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  line-height: var(--control-line-height);
+}
+
+@media (min-width: 640px) {
+  .auth-oauth-btn {
+    gap: 0.5rem;
+    padding-inline: 0.625rem;
+  }
+}
+
+.auth-oauth-btn-label {
+  @apply min-w-0 truncate text-start text-app-text;
+}
+
+.auth-oauth-btn-icon {
+  @apply size-5 shrink-0 sm:size-6;
+}
+
+/** Email verified (and similar): optional shield + stacked headline + supporting line, centered. */
+.auth-verified-message {
+  @apply mx-auto mt-1 flex max-w-sm flex-col items-center gap-5 text-center;
+}
+
+.auth-verified-shield {
+  @apply flex size-[4.25rem] shrink-0 items-center justify-center rounded-2xl border border-app-main-accent/40 bg-app-main-accent/12 text-app-main-accent shadow-sm;
+}
+
+.auth-verified-shield svg {
+  @apply size-8 shrink-0;
+}
+
+.auth-verified-message-body {
+  @apply flex flex-col gap-2.5;
+}
+
+.auth-verified-message-title {
+  @apply text-lg font-semibold leading-snug tracking-tight text-app-text sm:text-xl;
+}
+
+.auth-verified-message-lede {
+  @apply text-sm leading-relaxed text-app-text-muted sm:text-base;
+}
+
+/** Auth routes: pairs with `.btn-primary` (already red); keeps hook for auth-only tweaks. */
+.auth-cta {
+  @apply border-app-main-accent bg-app-main-accent text-white;
+  box-shadow:
+    0 18px 34px -18px color-mix(in srgb, var(--color-app-main-accent) 70%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-app-main-accent) 45%, transparent);
+}
+
+/* Legal (terms / privacy): same tokens as in-app docs */
+
+.auth-legal-wrap {
+  @apply mx-auto w-full max-w-4xl px-4 pb-16 pt-4 sm:px-6;
+}
+
+.auth-legal-brand {
+  @apply mb-8 flex flex-col items-center gap-3 border-b border-app-border pb-8 text-center sm:mb-10 sm:pb-10;
+}
+
+.auth-legal-card {
+  @apply rounded-2xl border border-app-border bg-app-surface/90 p-6 shadow-lg sm:p-10;
+}
+
+.auth-legal-section {
+  @apply mb-8 last:mb-0;
+}
+
+.auth-legal-foot {
+  @apply mt-10 flex flex-wrap justify-center gap-2 border-t border-app-border pt-8 text-sm text-app-text-muted;
+}
+
+.auth-legal-foot a {
+  @apply rounded-lg px-3 py-2 font-medium transition hover:bg-app-elevated hover:text-app-text;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vault unlock modal, large secure dialog, vault-door entrance animation    */
+/* -------------------------------------------------------------------------- */
+
+@keyframes vault-unlock-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vault-unlock-door-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes vault-unlock-door-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes vault-unlock-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(1.5rem) perspective(1400px) rotateX(8deg);
+    filter: brightness(0.75) saturate(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0) perspective(1400px) rotateX(0deg);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes vault-unlock-lock-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--color-app-accent) 35%, transparent),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 12px color-mix(in srgb, var(--color-app-accent) 0%, transparent),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vault Session — idle presets (timer lives on left rail)                    */
+/* -------------------------------------------------------------------------- */
+
+.vault-session-heading-block {
+  @apply max-w-full;
+}
+
+/** Label → preset chips under Idle auto-lock. */
+.vault-session-idle-auto-lock-block {
+  @apply flex flex-col gap-1.5 sm:gap-2;
+}
+
+/* Full-viewport blocking layer (above shell chrome, below toast z-[100]). */
+.app-blocking-overlay {
+  @apply fixed inset-0 z-[99] flex items-center justify-center p-6;
+  pointer-events: auto;
+}
+
+.app-blocking-overlay__backdrop {
+  @apply absolute inset-0;
+  background: rgba(2, 2, 4, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.app-blocking-overlay__panel {
+  @apply relative z-10 max-w-md rounded-2xl border border-app-border bg-app-elevated px-8 py-10 text-center shadow-xl;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 64px -12px rgba(0, 0, 0, 0.75);
+}
+
+.app-blocking-overlay__icon-wrap {
+  @apply mx-auto mb-5 flex size-14 items-center justify-center;
+}
+
+/* Spin the wrapper (not the <svg>). Use Tailwind `animate-spin` in the template — custom @keyframes + @apply on one rule was not reliably animating in production builds. */
+.app-blocking-overlay__icon-spin {
+  @apply flex size-10 shrink-0 items-center justify-center text-app-main-accent;
+  transform-origin: 50% 50%;
+}
+
+.app-blocking-overlay__icon {
+  @apply block size-10 shrink-0;
+}
+
+.app-blocking-overlay__title {
+  @apply text-lg font-semibold tracking-tight text-app-text;
+}
+
+.app-blocking-overlay__message {
+  @apply mt-2 text-sm leading-relaxed text-app-text-muted;
+}
+
+.vault-unlock-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6;
+  background: rgba(2, 2, 4, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: vault-unlock-overlay-in 0.38s ease-out forwards;
+}
+
+.vault-unlock-doors {
+  @apply pointer-events-none absolute inset-0 z-0 flex overflow-hidden;
+}
+
+.vault-unlock-door--left {
+  @apply h-full w-1/2 shrink-0 border-r border-white/[0.06] bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950;
+  transform: translateX(0);
+  animation: vault-unlock-door-left 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.04s forwards;
+  box-shadow: inset -12px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.vault-unlock-door--right {
+  @apply h-full w-1/2 shrink-0 border-l border-white/[0.06] bg-gradient-to-bl from-neutral-950 via-neutral-900 to-neutral-950;
+  transform: translateX(0);
+  animation: vault-unlock-door-right 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.04s forwards;
+  box-shadow: inset 12px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.vault-unlock-modal-anchor {
+  @apply relative z-10 w-full max-w-md lg:max-w-lg;
+}
+
+.vault-unlock-modal-shell {
+  @apply relative overflow-hidden rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_18px_50px_-8px_rgba(0,0,0,0.82),0_0_80px_-24px_color-mix(in_srgb,var(--color-app-accent)_24%,transparent)];
+  animation: vault-unlock-modal-in 0.58s cubic-bezier(0.22, 1, 0.32, 1) 0.16s both;
+  transform-origin: 50% 40%;
+}
+
+.vault-unlock-modal-rim {
+  @apply rounded-2xl p-px;
+  background: linear-gradient(
+    145deg,
+    rgba(90, 90, 90, 0.95) 0%,
+    rgba(45, 45, 45, 0.9) 35%,
+    color-mix(in srgb, var(--color-app-accent) 45%, #2a2a2a) 50%,
+    rgba(45, 45, 45, 0.9) 65%,
+    rgba(70, 70, 70, 0.95) 100%
+  );
+  background-size: 200% 200%;
+}
+
+.vault-unlock-modal-inner {
+  @apply rounded-[calc(1rem-1px)] bg-gradient-to-b from-app-surface via-app-bg to-app-surface px-5 py-6 sm:px-7 sm:py-7;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.vault-unlock-modal-header {
+  @apply mb-5 flex flex-col items-center gap-3 text-center sm:mb-6;
+}
+
+.vault-unlock-modal-lock {
+  @apply flex size-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-neutral-950/80 text-app-main-accent sm:size-16;
+  animation: vault-unlock-lock-glow 2.4s ease-in-out infinite;
+}
+
+/** Paired with `.vault-unlock-modal-lock`: no pulse, muted ink (short notices). */
+.vault-unlock-modal-lock.vault-unlock-modal-lock--static {
+  animation: none;
+  @apply text-app-text-muted;
+}
+
+.vault-unlock-modal-lock svg {
+  @apply size-7 sm:size-8;
+}
+
+.vault-unlock-modal-title {
+  @apply text-xl font-semibold tracking-tight text-app-text sm:text-2xl;
+}
+
+.vault-unlock-modal-sub {
+  @apply mt-1 max-w-sm text-xs leading-relaxed text-app-text-muted sm:text-sm;
+}
+
+.vault-unlock-modal-seal {
+  @apply mb-4 flex items-center justify-center gap-2 border-y border-dashed border-app-border/80 py-2 text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-app-text-muted sm:text-[0.65rem];
+}
+
+/**
+ * Vault secret field: compact, centered. Typed password uses brand red (WebKit/Firefox); placeholder stays muted gray.
+ */
+.vault-unlock-secret-input {
+  @apply w-full rounded-xl border-2 border-app-border/90 bg-app-bg text-center font-medium leading-normal tracking-wide shadow-inner transition focus:border-app-focus focus:outline-none focus:ring-2 focus:ring-app-focus;
+  min-height: var(--control-height);
+  padding-inline: var(--control-padding-inline);
+  padding-block: var(--control-padding-block);
+  font-size: var(--control-font-size);
+  color: var(--color-app-accent);
+  caret-color: var(--color-app-accent);
+  -webkit-text-fill-color: var(--color-app-accent);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.25),
+    0 0 0 1px color-mix(in srgb, var(--color-app-accent) 24%, transparent),
+    0 8px 20px color-mix(in srgb, var(--color-app-accent) 14%, transparent);
+}
+
+.vault-unlock-secret-input::placeholder {
+  text-align: center;
+  font-weight: 400;
+  letter-spacing: normal;
+  /* Lighter than `app-text-muted` alone, easier to read on dark field */
+  color: color-mix(in srgb, var(--color-app-text) 38%, var(--color-app-text-muted));
+  opacity: 1;
+  -webkit-text-fill-color: color-mix(in srgb, var(--color-app-text) 38%, var(--color-app-text-muted));
+}
+
+@media (max-width: 639px) {
+  .vault-unlock-secret-input::placeholder {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-unlock-overlay,
+  .vault-unlock-door--left,
+  .vault-unlock-door--right,
+  .vault-unlock-modal-shell,
+  .vault-unlock-modal-lock {
+    animation: none !important;
+    filter: none !important;
+  }
+
+  .vault-unlock-door--left,
+  .vault-unlock-door--right {
+    display: none;
+  }
+
+  .vault-unlock-modal-shell {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Ephemeral field share — public redeem + settings list */
+.share-redeem-page .share-redeem-wrap {
+  max-width: 42rem;
+}
+
+.share-redeem-brand {
+  @apply mb-8 flex flex-col items-center gap-3 text-center sm:mb-10;
+}
+
+.share-redeem-home {
+  @apply no-underline transition hover:opacity-90;
+}
+
+.share-redeem-lead {
+  @apply text-sm text-app-text-muted;
+}
+
+.share-redeem-body {
+  @apply w-full;
+}
+
+.share-redeem-code-input {
+  @apply w-full font-mono tracking-wide;
+}
+
+.share-redeem-revealed {
+  @apply flex flex-col items-center gap-4 py-2 text-center;
+}
+
+.share-redeem-value {
+  @apply max-w-full break-words text-xl leading-relaxed text-app-text;
+}
+
+.share-redeem-message {
+  @apply text-center text-sm leading-relaxed text-app-text-muted;
+}
+
+.share-redeem-field-label {
+  @apply text-sm text-app-text-muted;
+}
+
+.share-redeem-foot {
+  @apply mt-10;
+}
+
+.share-list-table th,
+.share-list-table td {
+  @apply border-b border-app-border/60 px-3 py-2 align-top;
+}
+
+.share-list-table th {
+  @apply text-xs font-semibold uppercase tracking-wide text-app-text-muted;
+}

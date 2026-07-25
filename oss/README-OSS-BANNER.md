@@ -1,0 +1,1 @@
+> **Open source (MIT).** This repository is the public release of [Argoned](https://argoned.com) — the same full-featured vault application as the managed service. For hosted production at **argoned.com**, see the official site. Self-hosting: [SELF-HOST.md](SELF-HOST.md).
