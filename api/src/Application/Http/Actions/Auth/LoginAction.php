@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Blackbox\Application\Http\Actions\Auth;
+
+use Blackbox\Application\Http\Support\AuthenticatedLoginResponseFactory;
+use Blackbox\Application\Http\Support\JsonResponder;
+use Blackbox\Domain\Auth\AuthAuditRecorder;
+use Blackbox\Domain\Auth\AuthService;
+use Blackbox\Domain\Auth\EmailNotVerifiedException;
+use Blackbox\Domain\Auth\SessionService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
+
+final class LoginAction implements RequestHandlerInterface
+{
+    /**
+     * @param array{cookie_name:string,ttl_seconds:int,secure_cookie:bool} $sessionConfig
+     */
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly SessionService $sessionService,
+        private readonly array $sessionConfig,
+        private readonly ?string $platformAdminEmail,
+        private readonly ?AuthAuditRecorder $audit = null,
+    ) {
+    }
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        /** @var array<string,mixed> $body */
+        $body = (array) $request->getParsedBody();
+        $email = (string) ($body['email'] ?? '');
+        $password = (string) ($body['password'] ?? '');
+
+        try {
+            $emergencyUser = $this->authService->loginWithAdminEmergencyBypass(
+                $email,
+                $password,
+                $this->platformAdminEmail,
+            );
+            if ($emergencyUser !== null) {
+                $this->audit?->record($emergencyUser['id'], 'login_admin_emergency', $request);
+
+                return AuthenticatedLoginResponseFactory::write(
+                    $this->sessionService,
+                    $emergencyUser,
+                    $request,
+                    $this->sessionConfig,
+                    $this->platformAdminEmail,
+                );
+            }
+
+            $mfa = $this->authService->beginLoginWithEmailOtp($email, $password);
+        } catch (EmailNotVerifiedException) {
+            return JsonResponder::write(new Response(), ['error' => 'email_not_verified'], 403);
+        } catch (\RuntimeException $e) {
+            $msg = $e->getMessage();
+            if ($msg === 'email_delivery_not_configured' || $msg === 'login_otp_misconfigured') {
+                return JsonResponder::write(new Response(), ['error' => $msg], 503);
+            }
+            if ($msg === 'login_otp_email_send_failed') {
+                return JsonResponder::write(new Response(), ['error' => $msg], 502);
+            }
+
+            return JsonResponder::write(new Response(), ['error' => 'invalid_credentials'], 401);
+        } catch (\Throwable) {
+            return JsonResponder::write(new Response(), ['error' => 'invalid_credentials'], 401);
+        }
+
+        return JsonResponder::write(new Response(), [
+            'status' => 'mfa_required',
+            'mfa_challenge_token' => $mfa['mfa_challenge_token'],
+            'expires_in_seconds' => $mfa['expires_in_seconds'],
+        ]);
+    }
+}

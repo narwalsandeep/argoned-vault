@@ -1,0 +1,37 @@
+# Production API image: nginx reverse-proxy + PHP-FPM + Opcache (replaces php built-in server).
+# Context: repository root (`vault/`). Bind-mount `./api:/app` is unchanged from base compose.
+
+FROM php:8.3-fpm-bookworm
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    curl \
+    gettext-base \
+    git \
+    libpq5 \
+    libpq-dev \
+    nginx \
+    supervisor \
+    unzip; \
+  docker-php-ext-install -j"$(nproc)" opcache pdo pdo_pgsql; \
+  apt-mark manual libpq5; \
+  apt-get purge -y --auto-remove libpq-dev; \
+  rm -rf /var/lib/apt/lists/*
+
+COPY api/docker/php-opcache.ini /usr/local/etc/php/conf.d/zz-opcache-production.ini
+COPY api/docker/php-fpm-zz-performance.conf /usr/local/etc/php-fpm.d/zz-performance.conf
+COPY api/docker/nginx-api.conf.template /etc/nginx/nginx.conf.template
+COPY api/docker/supervisord.conf /etc/supervisor/conf.d/blackbox-api.conf
+COPY api/docker/api-start-prod.sh /usr/local/bin/api-start-prod.sh
+RUN chmod +x /usr/local/bin/api-start-prod.sh \
+  && mkdir -p /var/log/supervisor \
+  && rm -f /etc/nginx/sites-enabled/default
+
+WORKDIR /app
+
+EXPOSE 3003
+
+CMD ["/usr/local/bin/api-start-prod.sh"]

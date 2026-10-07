@@ -1,0 +1,109 @@
+<app-shell-modal
+  [open]="open()"
+  [useDefaultHeader]="false"
+  ariaLabelledBy="change-vault-item-type-title"
+  bodyAlign="left"
+  closeAriaLabel="Close"
+  (dismissed)="close()"
+>
+  <h2 id="change-vault-item-type-title" class="vault-unlock-modal-title pr-10 text-left">Change type</h2>
+  <p class="vault-unlock-modal-sub mt-1 text-left text-app-text-muted">
+    Step {{ step() }} of 3 · data stays encrypted on your device until you apply
+  </p>
+
+  <div class="mt-5 max-h-[min(28rem,70vh)] overflow-y-auto scroll-themed pr-1 text-left">
+    @if (step() === 1) {
+      <p class="text-sm text-app-text-muted">Choose the new category.</p>
+      <ul class="mt-3 grid list-none gap-2 p-0" role="list">
+        @for (opt of targets(); track opt.itemType) {
+          <li>
+            <button type="button" class="control-btn-secondary w-full justify-start text-left" (click)="pickTarget(opt.itemType)">
+              {{ opt.label }}
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (step() === 2 && targetItemType(); as t) {
+      <p class="text-sm text-app-text-muted">
+        Map current fields → <span class="font-medium text-app-text">{{ targetLabel(t) }}</span>
+      </p>
+      @if (duplicateMapTargets().length > 0) {
+        <p class="mt-2 text-sm text-app-main-accent">Two or more sources target the same field. Use notes for extras.</p>
+      }
+      <div class="mt-3 overflow-x-auto rounded-lg border border-app-border">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-app-border bg-app-elevated/40">
+              <th class="px-3 py-2 font-medium text-app-text">Source key</th>
+              <th class="px-3 py-2 font-medium text-app-text">Vault field</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (src of mapSourceKeys(); track src) {
+              <tr class="border-b border-app-border/80 last:border-0">
+                <td class="px-3 py-2 font-mono text-xs text-app-text">{{ src }}</td>
+                <td class="px-3 py-2">
+                  <label class="sr-only" [for]="'chg-map-' + src">Map {{ src }}</label>
+                  <select
+                    class="control-field w-full min-w-[10rem] font-sans text-sm"
+                    [id]="'chg-map-' + src"
+                    [value]="selectValueForSource(src)"
+                    (change)="onMapChange(src, ($any($event.target).value ?? '') + '')"
+                  >
+                    @for (o of selectOptions(t); track o.value) {
+                      <option [value]="o.value">{{ o.label }}</option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (step() === 3 && targetItemType(); as t2) {
+      <p class="text-sm text-app-text-muted">Preview (normalized) for <span class="font-medium text-app-text">{{ targetLabel(t2) }}</span>.</p>
+      @if (previewRows().length === 0) {
+        <p class="mt-2 text-sm text-app-text-muted">Adjust mappings in the previous step.</p>
+      } @else {
+        <ul class="vault-item-detail-body mt-3 list-none p-0" role="list">
+          @for (row of previewRows(); track row.key) {
+            <li class="vault-item-detail-row" role="listitem">
+              <div class="vault-item-detail-row-main min-w-0">
+                <div class="vault-item-detail-key">{{ row.key }}</div>
+                <div class="vault-item-detail-value break-words">{{ row.value }}</div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+
+  <div class="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-app-border/80 pt-4">
+    <div class="flex flex-wrap gap-2">
+      @if (step() > 1) {
+        <button type="button" class="control-btn-secondary w-max" [disabled]="saving()" (click)="back()">Back</button>
+      }
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="control-btn-secondary w-max" [disabled]="saving()" (click)="close()">Cancel</button>
+      @if (step() === 2) {
+        <button type="button" class="control-btn-primary w-max" [disabled]="saving()" (click)="nextFromMap()">Preview</button>
+      }
+      @if (step() === 3) {
+        <button
+          type="button"
+          class="control-btn-primary w-max"
+          [disabled]="saving() || previewRows().length === 0"
+          (click)="apply()"
+        >
+          {{ saving() ? 'Saving…' : 'Apply' }}
+        </button>
+      }
+    </div>
+  </div>
+</app-shell-modal>

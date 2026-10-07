@@ -1,0 +1,241 @@
+<div class="page-content page-pad--settings settings-page-fill text-left">
+  <div class="app-page-layout">
+    <div class="app-page-main app-page-main--full">
+      <header class="settings-page-header">
+        <h1 class="settings-page-heading">
+          <span class="settings-page-title">Billing</span>
+          <span class="settings-page-heading-dot" aria-hidden="true">.</span>
+          <span class="settings-page-kicker"
+            >Bills &amp; plan—updates can lag a few minutes; we email you. Change tier on
+            <a routerLink="/pricing" class="font-medium text-app-main-accent hover:underline">Pricing</a></span
+          >
+        </h1>
+      </header>
+
+      @if (pageError()) {
+        <div class="settings-section-card mb-6 border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-200" role="alert">
+          {{ pageError() }}
+        </div>
+      }
+
+      @if (initialLoad()) {
+        <div class="settings-section-card flex items-center gap-3 p-8 text-app-text-muted">
+          <app-ui-spinner variant="muted" [decorative]="true" />
+          <span>Loading billing…</span>
+        </div>
+      } @else {
+        <nav class="settings-tabs mb-6" role="tablist" aria-label="Billing sections">
+          @for (tab of tabs; track tab.id) {
+            <button
+              type="button"
+              role="tab"
+              class="control-tab"
+              [class.control-tab--active]="activeTab() === tab.id"
+              [attr.aria-selected]="activeTab() === tab.id"
+              (click)="selectTab(tab.id)"
+            >
+              {{ tab.label }}
+            </button>
+          }
+        </nav>
+
+        @if (activeTab() === 'subscription') {
+          <div class="subscription-page-panel" role="tabpanel">
+            @if (showBillingUnavailableBlock()) {
+              <article class="pricing-tier-card">
+                <span class="pricing-tier-badge">Billing</span>
+                <h2 class="pricing-tier-name">Not available</h2>
+                <p class="pricing-tier-blurb">
+                  Online billing is not configured for this environment. You can still use Argoned on the free tier with full
+                  client-side encryption.
+                </p>
+              </article>
+            } @else if (!summary()) {
+              <p class="text-app-text-muted">No subscription data yet.</p>
+            } @else {
+              <article class="pricing-tier-card" aria-labelledby="sub-plan-name">
+                <span
+                  class="pricing-tier-badge"
+                  [class.pricing-tier-badge--accent]="summary()!.plan === 'pro'"
+                  >{{ planBadgeLabel(summary()!.plan) }}</span
+                >
+                <h2 id="sub-plan-name" class="pricing-tier-name">{{ planDisplayTitle(summary()!.plan) }}</h2>
+
+                <p class="pricing-tier-blurb">
+                  @if (summary()!.status) {
+                    <span class="text-app-text">Status:</span> {{ subscriptionStatusLabel(summary()!.status) }}.
+                  } @else if (summary()!.plan === 'free') {
+                    Starter tier; upgrade when you need more room on
+                    <a routerLink="/pricing" class="font-medium text-app-main-accent hover:underline">Pricing</a>.
+                  }
+                  @if (summary()!.plan === 'pro' && summary()!.cancel_at_period_end) {
+                    <span class="block pt-1 text-amber-200">Cancels at the end of this billing period; you keep access until then.</span>
+                  }
+                </p>
+
+                @if (
+                  (summary()!.plan === 'pro' && proBillingPeriodLine(summary()!.subscription)) ||
+                  summary()!.payment_method ||
+                  (summary()!.plan === 'lifetime' && lifetimePurchaseAmountLine(summary()!.subscription)) ||
+                  summary()!.billing_available === false
+                ) {
+                  <div class="subscription-plan-meta text-sm leading-relaxed text-app-text-muted">
+                    @if (summary()!.plan === 'pro' && proBillingPeriodLine(summary()!.subscription)) {
+                      <p class="m-0">
+                        <span class="text-app-text-muted">Billing period:</span>
+                        {{ proBillingPeriodLine(summary()!.subscription) }}
+                      </p>
+                    }
+                    @if (summary()!.payment_method; as pm) {
+                      <p class="m-0">
+                        <span class="text-app-text-muted">Card:</span>
+                        {{ pm.brand | titlecase }} · {{ pm.last4 }}
+                      </p>
+                    }
+                    @if (summary()!.plan === 'lifetime' && lifetimePurchaseAmountLine(summary()!.subscription)) {
+                      <p class="m-0">
+                        <span class="text-app-text-muted">Paid:</span>
+                        {{ lifetimePurchaseAmountLine(summary()!.subscription) }}
+                      </p>
+                    }
+                    @if (summary()!.billing_available === false) {
+                      <p class="m-0">Checkout is not available in this environment.</p>
+                    }
+                  </div>
+                }
+
+                @if (planFeatures(summary()!.plan).length > 0) {
+                  <ul class="pricing-tier-list pricing-tier-list--fill list-none p-0" role="list">
+                    @for (f of planFeatures(summary()!.plan); track f) {
+                      <li role="listitem">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{{ f }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                @if (summary()!.plan === 'lifetime') {
+                  <div class="subscription-lifetime-policy subscription-lifetime-policy--compact" role="region" aria-labelledby="sub-lifetime-policy-title">
+                    <h3 id="sub-lifetime-policy-title" class="subscription-lifetime-policy-title">Lifetime</h3>
+                    <p class="subscription-lifetime-policy-body">
+                      See
+                      <a routerLink="/terms" class="font-medium text-app-main-accent hover:underline">Terms</a>
+                      and
+                      <a routerLink="/privacy" class="font-medium text-app-main-accent hover:underline">Privacy</a>
+                      for export, notice, and refunds.
+                    </p>
+                    @if (lifetimePlanDetails(); as ld) {
+                      <p class="subscription-lifetime-policy-meta">
+                        Purchased (UTC) {{ formatPolicyDateUtc(ld.purchasedAt) }}.
+                        @if (ld.refundWindowOpen) {
+                          Refund requests through {{ formatPolicyDateUtc(ld.refundRequestUntil) }} (UTC).
+                        } @else {
+                          Refund window closed.
+                        }
+                      </p>
+                    }
+                  </div>
+                }
+
+                <div class="pricing-tier-actions subscription-plan-actions">
+                  <a routerLink="/pricing" class="control-btn-primary w-max">Change plan</a>
+                  @if (summary()!.plan === 'pro') {
+                    @if (summary()!.cancel_at_period_end) {
+                      <span class="text-sm text-app-text-muted">No further action; access ends with the period above.</span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="control-btn-secondary"
+                        [disabled]="cancelBusy()"
+                        (click)="cancelSubscription()"
+                      >
+                        @if (cancelBusy()) {
+                          <span class="inline-flex items-center gap-2">
+                            <app-ui-spinner variant="current" size="sm" [decorative]="true" />
+                            Processing…
+                          </span>
+                        } @else {
+                          Cancel at end of billing period
+                        }
+                      </button>
+                    }
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+
+        @if (activeTab() === 'invoices') {
+          <div class="subscription-page-panel" role="tabpanel">
+            <article class="pricing-tier-card max-w-3xl">
+              <span class="pricing-tier-badge">Receipts</span>
+              <h2 class="pricing-tier-name">Invoices</h2>
+              <p class="pricing-tier-blurb">
+                Stripe-hosted receipts for subscription charges. PDFs open in a new tab.
+              </p>
+
+              @if (!config()?.enabled) {
+                <p class="m-0 text-sm text-app-text-muted">Invoices appear when billing is enabled for this deployment.</p>
+              } @else if (invoicesLoad()) {
+                <div class="flex items-center gap-3 text-app-text-muted">
+                  <app-ui-spinner variant="muted" [decorative]="true" />
+                  Loading…
+                </div>
+              } @else if (invoices().length === 0) {
+                <p class="m-0 text-sm leading-relaxed text-app-text-muted">
+                  Nothing here yet. After you subscribe or pay, receipts usually show up within a few minutes; refresh later if
+                  needed. Compare plans on
+                  <a routerLink="/pricing" class="font-medium text-app-main-accent hover:underline">Pricing</a>.
+                </p>
+              } @else {
+                <ul class="subscription-invoice-list m-0 list-none p-0" role="list">
+                  @for (inv of invoices(); track inv.stripe_invoice_id) {
+                    <li class="subscription-invoice-row" role="listitem">
+                      <div class="subscription-invoice-row-top">
+                        <div class="subscription-invoice-row-left min-w-0">
+                          <p class="subscription-invoice-date">{{ formatInvoiceDate(inv) }}</p>
+                          <p class="subscription-invoice-period">{{ formatInvoicePeriodRange(inv) }}</p>
+                        </div>
+                        <div class="subscription-invoice-row-right text-left sm:text-right">
+                          <p class="subscription-invoice-amount">{{ formatMoney(inv.amount_paid, inv.currency) }}</p>
+                          <p class="subscription-invoice-status capitalize">{{ inv.status }}</p>
+                        </div>
+                      </div>
+                      <div class="subscription-invoice-links">
+                        @if (inv.hosted_invoice_url) {
+                          <a
+                            class="font-medium text-app-main-accent hover:underline"
+                            [href]="inv.hosted_invoice_url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >View</a
+                          >
+                        }
+                        @if (inv.invoice_pdf) {
+                          <a
+                            class="font-medium text-app-main-accent hover:underline"
+                            [href]="inv.invoice_pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >PDF</a
+                          >
+                        }
+                        @if (!inv.hosted_invoice_url && !inv.invoice_pdf) {
+                          <span class="text-app-text-muted">—</span>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </article>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>
